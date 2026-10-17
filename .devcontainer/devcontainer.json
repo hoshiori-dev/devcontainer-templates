@@ -14,18 +14,18 @@
       "packages": "shellcheck"
     },
     "ghcr.io/hoshiori-dev/devcontainer-features/betterleaks:1": {
-      "version": "1.9.0"
+      "version": "latest"
     },
     "ghcr.io/hoshiori-dev/devcontainer-features/deno:1": {
-      "version": "2.9.7"
+      "version": "latest"
     },
     "ghcr.io/hoshiori-dev/devcontainer-features/openspec:1": {
-      "version": "1.14.3",
+      "version": "latest",
       "disableTelemetry": true
     },
     "ghcr.io/hoshiori-dev/devcontainer-features/uv:1": {
-      "version": "0.13.1",
-      "toolsToInstall": "pre-commit==4.7.0,rust-just==1.59.0"
+      "version": "latest",
+      "toolsToInstall": "pre-commit,rust-just"
     },
     "ghcr.io/devcontainers/features/node:2": {
       "version": "24"

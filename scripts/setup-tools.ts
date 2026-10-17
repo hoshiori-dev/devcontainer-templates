@@ -1,4 +1,4 @@
-/** Install the repository's pinned development tools without administrative access. */
+/** Install pinned CI tools; preserve Feature-provided tools in the development container. */
 import { join } from "node:path";
 
 const versions = JSON.parse(await Deno.readTextFile("tools.json"));
@@ -34,8 +34,12 @@ await run("npm", [
   "--prefix",
   prefix,
   `@devcontainers/cli@${versions.devcontainerCli}`,
-  `@fission-ai/openspec@${versions.openSpec}`,
+  ...(Deno.args.includes("--ci") ? [`@fission-ai/openspec@${versions.openSpec}`] : []),
 ]);
+if (!Deno.args.includes("--ci")) {
+  await run("pre-commit", ["install", "--install-hooks"]);
+  Deno.exit(0);
+}
 await run("uv", ["tool", "install", "--force", `pre-commit==${versions.preCommit}`]);
 await run("uv", ["tool", "install", "--force", `rust-just==${versions.just}`]);
 
@@ -76,4 +80,3 @@ try {
 await run(join(bin, "betterleaks"), ["version"]);
 const githubPath = Deno.env.get("GITHUB_PATH");
 if (githubPath) await Deno.writeTextFile(githubPath, `${bin}\n`, { append: true });
-if (!Deno.args.includes("--ci")) await run("pre-commit", ["install", "--install-hooks"]);

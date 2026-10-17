@@ -5,6 +5,11 @@ periodic consistency review. The changing source's PR author owns updating its d
 same PR. Scripts and workflows own executable facts; knowledge files own operating conventions;
 OpenSpec owns template behavior.
 
+The development container uses the latest Betterleaks, Deno, OpenSpec and uv releases, with
+unconstrained pre-commit and rust-just packages supplied by its Features. Local post-create setup
+preserves these tools. `tools.json` pins their CI installations separately; the Dev Container CLI
+and Node settings follow their existing pins.
+
 | Trigger/source                                   | Update and verify                                                                                                     |
 | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
 | Template metadata, NOTES, or published files     | Increment the affected version, regenerate docs, run docs-check, compare the spec, and run its real container test.   |
