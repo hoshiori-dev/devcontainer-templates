@@ -54,5 +54,6 @@ implementation. `bootstrap-ubuntu` records that initial package and may create t
 under this one-time approval. Record that evidence in the initial draft PR; it does not confer agent
 label approval, archive, merge, or manual release authority. The initial PR cannot rely on unmerged
 privileged workflows as trusted approval evidence. Normal label-based approval begins after the
-initial harness is human-merged. The initial change remains active until the maintainer confirms
-completion and explicitly directs archive inside its PR.
+initial harness is human-merged. The maintainer confirmed completion and directed archive on
+2026-10-18. The approved record is in `openspec/changes/archive/2026-10-18-bootstrap-ubuntu/`; merge
+remains a human action.

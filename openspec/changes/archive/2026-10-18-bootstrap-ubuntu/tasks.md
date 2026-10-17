@@ -12,8 +12,9 @@
       jobs passed).
 - [x] 2.3 Independently read the deposited harness and reconcile its commands and gates.
 - [x] 2.4 Prepare the draft PR with initial user-approval evidence and verification limits.
-- [ ] 2.5 Wait for maintainer completion confirmation and explicit archive instruction.
-- [ ] 2.6 Prepare the final verified revision for archive and human merge.
+- [x] 2.5 Wait for maintainer completion confirmation and explicit archive instruction (received
+      2026-10-18).
+- [x] 2.6 Prepare the final verified revision for archive and human merge.
 
 After merge, the maintainer enables protection using observed workflow names and verifies public
 publication as described in the platform operations guide. These post-merge operations are not
