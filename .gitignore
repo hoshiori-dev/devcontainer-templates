@@ -1,0 +1,10 @@
+### Devcontainer ###
+devcontainer-lock.json
+
+### Skills Lock ###
+skills-lock.json
+
+### Local outputs ###
+build/
+.cache/
+node_modules/

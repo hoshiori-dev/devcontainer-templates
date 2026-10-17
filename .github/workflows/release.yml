@@ -1,0 +1,139 @@
+name: Publish merged templates
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: template-publication
+  cancel-in-progress: false
+jobs:
+  revalidate:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-tools
+      - run: |
+          set -euo pipefail
+          just check
+          just docs-check
+          just package
+          for metadata in src/*/devcontainer-template.json; do
+            template_id=$(basename "$(dirname "$metadata")")
+            just test "$template_id"
+          done
+  publish:
+    needs: revalidate
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      matrix: ${{ steps.publish.outputs.matrix }}
+      pending: ${{ steps.publish.outputs.pending }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-tools
+      - name: Authenticate to GHCR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: deno run -A scripts/github.ts release prepare
+      - if: always()
+        run: docker logout ghcr.io
+  provenance:
+    needs: publish
+    if: needs.publish.outputs.pending == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        item: ${{ fromJSON(needs.publish.outputs.matrix) }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-deno
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - id: prior
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ITEM: ${{ toJSON(matrix.item) }}
+        run: deno run -A scripts/github.ts release provenance "$ITEM"
+      - if: steps.prior.outputs.needed == 'true'
+        uses: actions/attest-build-provenance@96b4a1ef7235a096b17240c259729fdd70c83d45 # v2
+        with:
+          subject-name: ${{ matrix.item.name }}
+          subject-digest: ${{ matrix.item.digest }}
+          push-to-registry: false
+      - if: always()
+        run: docker logout ghcr.io
+  source-tags:
+    needs: [publish, provenance]
+    if: needs.publish.outputs.pending == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        item: ${{ fromJSON(needs.publish.outputs.matrix) }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: read
+      attestations: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-deno
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          ITEM: ${{ toJSON(matrix.item) }}
+        run: deno run -A scripts/github.ts release tag "$ITEM"
+      - if: always()
+        run: docker logout ghcr.io
+  public-consumption:
+    needs: [publish, provenance, source-tags]
+    # Empty publication matrices legitimately skip provenance/tag jobs.
+    if: >-
+      always() && needs.publish.result == 'success' &&
+      (needs.provenance.result == 'success' || needs.provenance.result == 'skipped') &&
+      (needs.source-tags.result == 'success' || needs.source-tags.result == 'skipped')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-tools
+      - name: Verify anonymous manifest fetch and template apply
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: deno run -A scripts/github.ts release public-verify

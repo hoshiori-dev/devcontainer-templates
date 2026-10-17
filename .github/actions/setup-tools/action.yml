@@ -1,0 +1,28 @@
+name: Set up project tools
+description: Install the versions owned by tools.json
+runs:
+  using: composite
+  steps:
+    - id: versions
+      shell: bash
+      run: |
+        node - <<'JS'
+        const fs = require('node:fs');
+        const tools = JSON.parse(fs.readFileSync('tools.json', 'utf8'));
+        for (const key of ['deno', 'uv', 'node']) {
+          if (!/^[0-9.]+$/.test(tools[key])) throw new Error(`Invalid ${key} version`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `${key}=${tools[key]}\n`);
+        }
+        JS
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      with:
+        node-version: ${{ steps.versions.outputs.node }}
+    - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+      with:
+        deno-version: ${{ steps.versions.outputs.deno }}
+    - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
+      with:
+        version: ${{ steps.versions.outputs.uv }}
+        enable-cache: false
+    - shell: bash
+      run: bash scripts/setup-tools.sh --ci

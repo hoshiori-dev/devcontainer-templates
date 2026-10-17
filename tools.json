@@ -1,0 +1,10 @@
+{
+  "deno": "2.9.7",
+  "uv": "0.13.1",
+  "just": "1.59.0",
+  "preCommit": "4.7.0",
+  "devcontainerCli": "0.89.0",
+  "openSpec": "1.14.3",
+  "betterleaks": "1.9.0",
+  "node": "24"
+}
