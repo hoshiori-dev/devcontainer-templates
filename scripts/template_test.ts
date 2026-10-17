@@ -1,3 +1,4 @@
+#!/usr/bin/env -S deno test --allow-read --allow-write --allow-run=git,deno
 import {
   docs,
   jsonc,
@@ -62,7 +63,6 @@ Deno.test("affected selection handles shared infrastructure and documents", () =
     const path of [
       "scripts/template.ts",
       ".github/workflows/ci.yml",
-      "deno.lock",
       "test/lib/helper.sh",
       ".devcontainer/devcontainer.json",
     ]

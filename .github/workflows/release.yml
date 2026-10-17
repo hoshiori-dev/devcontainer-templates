@@ -54,7 +54,7 @@ jobs:
       - id: publish
         env:
           GH_TOKEN: ${{ github.token }}
-        run: deno run -A scripts/github.ts release prepare
+        run: ./scripts/github_release.ts prepare
       - if: always()
         run: docker logout ghcr.io
   provenance:
@@ -83,7 +83,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           ITEM: ${{ toJSON(matrix.item) }}
-        run: deno run -A scripts/github.ts release provenance "$ITEM"
+        run: ./scripts/github_release.ts provenance "$ITEM"
       - if: steps.prior.outputs.needed == 'true'
         uses: actions/attest-build-provenance@96b4a1ef7235a096b17240c259729fdd70c83d45 # v2
         with:
@@ -116,7 +116,7 @@ jobs:
       - env:
           GH_TOKEN: ${{ github.token }}
           ITEM: ${{ toJSON(matrix.item) }}
-        run: deno run -A scripts/github.ts release tag "$ITEM"
+        run: ./scripts/github_release.ts tag "$ITEM"
       - if: always()
         run: docker logout ghcr.io
   public-consumption:
@@ -136,4 +136,4 @@ jobs:
       - name: Verify anonymous manifest fetch and template apply
         env:
           GH_TOKEN: ${{ github.token }}
-        run: deno run -A scripts/github.ts release public-verify
+        run: ./scripts/github_release.ts public-verify

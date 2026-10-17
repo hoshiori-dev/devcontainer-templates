@@ -10,6 +10,11 @@ unconstrained pre-commit and rust-just packages supplied by its Features. Local 
 preserves these tools. `tools.json` pins their CI installations separately; the Dev Container CLI
 and Node settings follow their existing pins.
 
+Deno entrypoints are executable scripts whose shebangs own their runtime permissions. Invoke them
+directly from recipes and workflows; changing an entrypoint's capabilities requires updating its
+shebang. Pure test files need no permissions; resource-using tests declare their own. Run the suite
+through `scripts/test.sh`. Deno lockfiles are disabled; imports retain explicit dependency versions.
+
 | Trigger/source                                   | Update and verify                                                                                                     |
 | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
 | Template metadata, NOTES, or published files     | Increment the affected version, regenerate docs, run docs-check, compare the spec, and run its real container test.   |

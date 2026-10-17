@@ -1,3 +1,4 @@
+#!/usr/bin/env -S deno run --allow-read --allow-write --allow-env=HOME,PATH,GITHUB_PATH --allow-net=github.com,release-assets.githubusercontent.com,objects.githubusercontent.com --allow-run
 /** Install pinned CI tools; preserve Feature-provided tools in the development container. */
 import { join } from "node:path";
 

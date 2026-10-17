@@ -25,7 +25,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
-          ids=$(deno run -A scripts/template.ts affected --base "$BASE_SHA")
+          ids=$(./scripts/template.ts affected --base "$BASE_SHA")
           printf 'ids=%s\n' "$ids" >> "$GITHUB_OUTPUT"
           changed_paths=$(git diff --name-only "$BASE_SHA" HEAD)
           if grep -Eq '^(\.devcontainer/|tools\.json$|scripts/setup-tools\.sh$|\.github/actions/setup-tools/|\.github/workflows/ci\.yml$)' <<< "$changed_paths"; then
@@ -45,7 +45,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           just check
-          deno run -A scripts/template.ts validate --base "$BASE_SHA"
+          ./scripts/template.ts validate --base "$BASE_SHA"
           just docs-check
           just package
   secret-scan:

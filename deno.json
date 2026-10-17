@@ -1,5 +1,5 @@
 {
-  "lock": true,
+  "lock": false,
   "fmt": {
     "lineWidth": 100,
     "exclude": [
@@ -21,6 +21,6 @@
   },
   "tasks": {
     "check": "just check",
-    "test": "deno test --allow-read --allow-write --allow-run --allow-env scripts/"
+    "test": "./scripts/test.sh"
   }
 }

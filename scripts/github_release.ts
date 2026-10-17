@@ -1,3 +1,4 @@
+#!/usr/bin/env -S deno run --allow-read --allow-write --allow-env --allow-net --allow-run=git,gh,tar,devcontainer
 /** Release phases run only on the exact, human-merged main commit. */
 import { validateStrict } from "npm:compare-versions@6.1.1";
 import { publishResult } from "./github.ts";
@@ -445,3 +446,4 @@ export async function release(args: string[]): Promise<void> {
     else throw new Error("release prepare|provenance ITEM|tag ITEM|public-verify");
   }
 }
+if (import.meta.main) await release(Deno.args);

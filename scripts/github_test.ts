@@ -1,3 +1,4 @@
+#!/usr/bin/env -S deno test
 import {
   approvalActor,
   checkArchive,

@@ -1,4 +1,5 @@
-/** Repository-owned GitHub policy and release commands. Privileged callers use default-branch code. */
+#!/usr/bin/env -S deno run --allow-read --allow-write --allow-net=api.github.com --allow-env=GH_TOKEN,GITHUB_TOKEN,GITHUB_REPOSITORY,GITHUB_EVENT_PATH,GITHUB_OUTPUT,GITHUB_RUN_ID,NEEDS
+/** Repository-owned GitHub policy commands. Privileged callers use default-branch code. */
 export type FileContent = { path: string; content: string };
 type Json = Record<string, unknown>;
 const encoder = new TextEncoder();
@@ -690,9 +691,6 @@ async function main(): Promise<void> {
   switch (command) {
     case "protected-policy":
       await protectedPolicy();
-      break;
-    case "release":
-      await (await import("./github_release.ts")).release(args);
       break;
     case "pr-check":
       await prCheck();
