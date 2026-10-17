@@ -1,0 +1,38 @@
+name: Record human specification approval
+run-name: "Specification approval #${{ github.event.pull_request.number }}"
+on:
+  pull_request_target:
+    types: [labeled, synchronize, reopened]
+permissions:
+  contents: read
+concurrency:
+  group: spec-approval-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  approval:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: write
+      actions: read
+    steps:
+      # Security exception: execute only trusted base policy, reading PR data via API.
+      # Never check out the PR, run contributor code, or install its dependencies here.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-deno
+      - id: approval
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/github.ts approval
+      - if: steps.approval.outputs.approved == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ steps.approval.outputs.artifact }}
+          path: approval.json
+          if-no-files-found: error
+          retention-days: 90
+          overwrite: false

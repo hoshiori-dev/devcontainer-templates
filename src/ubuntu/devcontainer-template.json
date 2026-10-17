@@ -1,0 +1,11 @@
+{
+  "id": "ubuntu",
+  "version": "1.0.0",
+  "name": "Ubuntu",
+  "description": "A minimal Ubuntu 24.04 development container with a non-root vscode user.",
+  "documentationURL": "https://github.com/hoshiori-dev/devcontainer-templates/tree/main/src/ubuntu",
+  "licenseURL": "https://github.com/hoshiori-dev/devcontainer-templates/blob/main/LICENSE",
+  "publisher": "hoshiori-dev",
+  "platforms": ["Ubuntu", "Linux"],
+  "keywords": ["ubuntu", "linux"]
+}

@@ -1,0 +1,113 @@
+name: Pull request checks
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      ids: ${{ steps.changed.outputs.ids }}
+      devcontainer: ${{ steps.changed.outputs.devcontainer }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-deno
+      - id: changed
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          ids=$(./scripts/template.ts affected --base "$BASE_SHA")
+          printf 'ids=%s\n' "$ids" >> "$GITHUB_OUTPUT"
+          changed_paths=$(git diff --name-only "$BASE_SHA" HEAD)
+          if grep -Eq '^(\.devcontainer/|\.github/actions/setup-(tools|deno)/|\.github/workflows/ci\.yml$)' <<< "$changed_paths"; then
+            echo 'devcontainer=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'devcontainer=false' >> "$GITHUB_OUTPUT"
+          fi
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-tools
+      - env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          just check "$BASE_SHA"
+          just package
+  betterleaks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-tools
+      - env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: betterleaks git --redact --no-banner --ignore-gitleaks-allow --log-opts="$BASE_SHA..HEAD" .
+  containers:
+    needs: changes
+    if: needs.changes.outputs.ids != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        id: ${{ fromJSON(needs.changes.outputs.ids) }}
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-tools
+      - env:
+          TEMPLATE_ID: ${{ matrix.id }}
+        run: just test "$TEMPLATE_ID"
+  devcontainer:
+    needs: changes
+    if: needs.changes.outputs.devcontainer == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # Reviewed upstream third-party action. Update owner: repository maintainer.
+      - uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca # v0.3; reviewed 2026-10-17
+        with:
+          push: never
+          runCmd: just check
+  ci-gate:
+    if: always()
+    needs: [changes, checks, betterleaks, containers, devcontainer]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Reject failed, cancelled, or unexpectedly skipped checks
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+          IDS: ${{ needs.changes.outputs.ids }}
+          DEVCONTAINER: ${{ needs.changes.outputs.devcontainer }}
+        run: |
+          node - <<'JS'
+          const needs = JSON.parse(process.env.NEEDS);
+          for (const [name, job] of Object.entries(needs)) {
+            const optional = (name === 'containers' && process.env.IDS === '[]') ||
+              (name === 'devcontainer' && process.env.DEVCONTAINER === 'false');
+            if (job.result !== 'success' && !(optional && job.result === 'skipped')) {
+              throw new Error(`${name}: ${job.result}`);
+            }
+          }
+          JS

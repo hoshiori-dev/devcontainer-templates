@@ -1,0 +1,25 @@
+schema: spec-driven
+
+context: |
+  This repository publishes Dev Container Templates through GHCR.
+  Write artifacts in English using the template's structural headings.
+  Read .agents/knowledge/spec-workflow.md before preparing, applying, syncing,
+  or archiving a change. Specifications own template behavior; Issues own status.
+  Ordinary tooling and documentation changes without behavior changes use PR
+  acceptance rather than introducing behavior specifications.
+
+rules:
+  proposal:
+    - State the user-visible behavior and link any related Issue.
+  design:
+    - Record approach and trust boundaries without an implementation task list.
+  tasks:
+    - Create tasks only after the maintainer has approved the proposal, design,
+      and delta specs under the repository specification contract.
+operations:
+  apply:
+    guidance:
+      - Check approval evidence before implementation.
+  archive:
+    guidance:
+      - Archive in the same PR only after explicit maintainer completion and archive instructions.

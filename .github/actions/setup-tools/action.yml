@@ -1,0 +1,63 @@
+name: Set up project tools
+description: Install the latest stable development tools
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      with:
+        node-version: "*"
+        check-latest: true
+    - uses: ./.github/actions/setup-deno
+    - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
+      with:
+        version: latest
+        enable-cache: false
+    - name: Install project tools
+      shell: bash
+      run: |
+        npm install --global @devcontainers/cli@latest @fission-ai/openspec@latest
+        uv tool install --upgrade pre-commit
+        uv tool install --upgrade rust-just
+    - name: Install Betterleaks
+      shell: bash
+      run: |
+        case "$(uname -s)/$(uname -m)" in
+          Linux/x86_64) arch=x64 ;;
+          Linux/aarch64 | Linux/arm64) arch=arm64 ;;
+          *) echo 'Betterleaks setup requires Linux amd64 or arm64' >&2; exit 1 ;;
+        esac
+        temporary=$(mktemp -d)
+        trap 'rm -rf "$temporary"' EXIT
+        # Resolve once so the archive and checksums come from the same release.
+        release_tag=$(curl -fsSL https://api.github.com/repos/betterleaks/betterleaks/releases/latest |
+          node -e '
+            let input = "";
+            process.stdin.on("data", chunk => input += chunk);
+            process.stdin.on("end", () => {
+              const tag = JSON.parse(input).tag_name;
+              if (!/^v[0-9]+\.[0-9]+\.[0-9]+$/.test(tag)) throw new Error("Invalid stable release tag");
+              process.stdout.write(tag);
+            });
+          ')
+        archive="betterleaks_${release_tag#v}_linux_${arch}.tar.gz"
+        release="https://github.com/betterleaks/betterleaks/releases/download/$release_tag"
+        curl -fsSL "$release/checksums.txt" -o "$temporary/checksums.txt"
+        curl -fsSL "$release/$archive" -o "$temporary/$archive"
+        checksum=$(awk -v archive="$archive" '$2 == archive { print $1 }' "$temporary/checksums.txt")
+        if [[ ! $checksum =~ ^[a-f0-9]{64}$ ]]; then
+          echo "Missing or invalid checksum for $archive" >&2
+          exit 1
+        fi
+        (cd "$temporary"; printf '%s  %s\n' "$checksum" "$archive" | sha256sum --check --strict)
+        tar -xzf "$temporary/$archive" -C "$temporary" betterleaks
+        mkdir -p "$HOME/.local/bin"
+        install -m 0755 "$temporary/betterleaks" "$HOME/.local/bin/betterleaks"
+        printf '%s\n' "$HOME/.local/bin" >> "$GITHUB_PATH"
+    - name: Report installed versions
+      shell: bash
+      run: |
+        devcontainer --version
+        openspec --version
+        pre-commit --version
+        just --version
+        betterleaks version

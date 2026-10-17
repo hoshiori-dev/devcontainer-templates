@@ -1,0 +1,49 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-json
+        exclude: '(^|/)devcontainer\.json$|\.jsonc$'
+      - id: check-yaml
+      - id: check-toml
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: detect-private-key
+  - repo: local
+    hooks:
+      - id: deno-fmt
+        name: deno fmt
+        entry: deno fmt --permit-no-files
+        language: system
+        files: '\.(?:[cm]?[jt]sx?|jsonc?|ya?ml|md|markdown|css|scss|less|html|xml|svg)$'
+        exclude: '^\.claude/|^\.agents/skills/openspec-|^src/[^/]+/README\.md$'
+      - id: deno-lint
+        name: deno lint
+        language: system
+        entry: deno lint
+        files: '^scripts/.*\.[cm]?[jt]s$'
+      - id: deno-check
+        name: deno check
+        language: system
+        entry: deno check
+        files: '^scripts/.*\.[cm]?[jt]s$'
+      - id: shellcheck
+        name: shellcheck
+        entry: shellcheck
+        language: system
+        types: [shell]
+      - id: betterleaks
+        name: secret scanning with betterleaks
+        entry: betterleaks git --pre-commit --staged --redact --no-banner --ignore-gitleaks-allow
+        language: system
+        pass_filenames: false
+        always_run: true

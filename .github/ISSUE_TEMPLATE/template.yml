@@ -1,0 +1,23 @@
+name: Template request
+description: Propose a new template or a behavior change
+labels: ["type:template", "area:templates"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User need
+      description: Who needs this template and what development workflow should it enable?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Intended outcome
+      description: Outline the desired image, tools, architecture support, and limits. Approved behavioral requirements belong in OpenSpec.
+    validations:
+      required: true
+  - type: textarea
+    id: specification
+    attributes:
+      label: Specification
+      description: Link an existing proposal if available. Implementation waits for human specification approval.

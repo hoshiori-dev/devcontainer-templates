@@ -1,0 +1,23 @@
+name: Engineering task
+description: Track tooling, documentation, or maintenance work
+labels: ["type:task"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Explain the current problem and why it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Acceptance
+      description: Describe the observable result and validation. Link specifications when template behavior changes.
+    validations:
+      required: true
+  - type: textarea
+    id: links
+    attributes:
+      label: Related work
+      description: Link dependencies or a parent issue when needed.

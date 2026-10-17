@@ -1,0 +1,28 @@
+name: Bug report
+description: Report a reproducible template or tooling defect
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the observed behavior and what you expected.
+    validations:
+      required: true
+  - type: input
+    id: template
+    attributes:
+      label: Template reference
+      description: Include the full template reference and version, if applicable.
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Include commands, host OS, CPU architecture, and CLI version. Remove credentials and personal data.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Include relevant redacted error output.
