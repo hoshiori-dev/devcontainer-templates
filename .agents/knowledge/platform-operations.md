@@ -18,11 +18,14 @@ state. These observations do not prove those features are disabled. Re-read with
 account before claiming enforcement.
 
 Bootstrap readback on 2026-10-17: all seven declared labels were created and verified. The
-repository settings PATCH returned `Resource not accessible by integration` (HTTP 403); readback
-still permits merge commits and rebase, and automatic branch deletion is false. Squash-only and
-deletion settings are therefore pending, not enforced. The denied endpoint is
-`PATCH /repos/hoshiori-dev/devcontainer-templates`; apply the General checklist below with a
-maintainer credential. Branch protection is deliberately deferred until bootstrap workflows exist.
+repository settings PATCH returned `Resource not accessible by integration` (HTTP 403), leaving
+merge settings for the maintainer to configure.
+
+Follow-up readback on 2026-10-18 confirms PR #2 is merged, squash is the only allowed merge method,
+and automatic branch deletion is enabled. The maintainer also reports configuring Actions and
+security settings; their management APIs still return 403, so those settings are not independently
+verified by this integration. Trusted policy now runs from `main` and emits `protected-policy` and
+`spec-archived`. Enable the required-check rules after confirming these checks on a follow-up PR.
 
 Use `just labels-check` and `scripts/github.ts platform-check` to inspect drift. For denied settings
 operations, give the maintainer the denied endpoint, response, and corresponding Settings page
