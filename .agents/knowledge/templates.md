@@ -12,7 +12,9 @@ them as registry paths.
 Template versions advance independently using SemVer. Every published-content change increments its
 template's version; use a new patch release to repair a published version. The public reference is
 `ghcr.io/hoshiori-dev/devcontainer-templates/<id>:<version>` and the corresponding source tag is
-`<id>/v<version>`. Treat version tags as immutable provenance.
+`<id>/v<version>`. Never move a published source tag. OCI version tags can be changed by package
+writers; verify content and provenance, and use `@sha256:<digest>` when a fixed artifact is
+required.
 
 Use official images and Features; verify current tags and architecture support before selecting or
 updating them. Keep option names and substitutions compatible with the template specification. Every

@@ -1,11 +1,12 @@
 #!/usr/bin/env -S deno test
 import {
   approvalActor,
+  checkApprovalHead,
   checkArchive,
-  checkGate,
   metadataBehaviorChanged,
   packageDigest,
   packagePath,
+  policyChanges,
   publishResult,
   stableChangesCovered,
   stableDeltaMatches,
@@ -24,6 +25,22 @@ function rejects(fn: () => unknown): void {
 }
 const proposal = { path: "openspec/changes/ubuntu/proposal.md", content: "Ubuntu 24.04" };
 const delta = { path: "openspec/changes/ubuntu/specs/template/spec.md", content: "non-root user" };
+Deno.test("policy classifies both sides of renames out of protected directories", () => {
+  const changes = policyChanges([
+    { filename: "docs/spec.md", previous_filename: "openspec/specs/template/spec.md" },
+    { filename: "scripts/install.sh", previous_filename: "src/ubuntu/install.sh" },
+    { filename: "docs/metadata.json", previous_filename: "src/ubuntu/devcontainer-template.json" },
+  ]);
+  assert(changes.behavior);
+  assert(changes.stable.includes("openspec/specs/template/spec.md"));
+  assert(changes.metadata.includes("src/ubuntu/devcontainer-template.json"));
+  const moved = policyChanges([
+    { filename: "src/debian/install.sh", previous_filename: "src/ubuntu/install.sh" },
+  ]);
+  assert(moved.paths.includes("src/debian/install.sh"));
+  assert(moved.paths.includes("src/ubuntu/install.sh"));
+  assert(!policyChanges([{ filename: "README.md" }]).behavior);
+});
 Deno.test("approval covers content, ignores tasks, and survives archival", async () => {
   const original = await packageDigest([proposal, delta]);
   assert(original !== await packageDigest([{ ...proposal, content: "Ubuntu 26.04" }, delta]));
@@ -52,6 +69,12 @@ Deno.test("approval rejects bot identities, contributors, and missing identities
   assert(!approvalActor({ type: "User", login: "contributor" }, "write"));
   assert(!approvalActor({ type: "User" }, "admin"));
 });
+Deno.test("approval rejects a PR pushed after the maintainer's label event", () => {
+  const approvedHead = "a".repeat(40);
+  checkApprovalHead(approvedHead, approvedHead);
+  rejects(() => checkApprovalHead(approvedHead, "b".repeat(40)));
+  rejects(() => checkApprovalHead(undefined, approvedHead));
+});
 Deno.test("archive gate is pending in drafts and blocks ready PRs", () => {
   checkArchive([proposal], true);
   rejects(() => checkArchive([proposal], false));
@@ -63,12 +86,6 @@ Deno.test("archive gate is pending in drafts and blocks ready PRs", () => {
     false,
   );
   assert(packagePath("openspec/specs/template/spec.md") === undefined);
-});
-Deno.test("aggregate fails cancelled or failed checks and unexpected skips", () => {
-  checkGate({ checks: { result: "success" }, containers: { result: "skipped" } }, ["containers"]);
-  for (const result of ["failure", "cancelled", "timed_out", "skipped"]) {
-    rejects(() => checkGate({ checks: { result } }));
-  }
 });
 Deno.test("release parses complete exact versions and explicit skipped entries", () => {
   const metadata = [{ id: "ubuntu", version: "1.0.0" }];

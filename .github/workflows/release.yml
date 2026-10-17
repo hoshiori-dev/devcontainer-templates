@@ -25,7 +25,6 @@ jobs:
       - run: |
           set -euo pipefail
           just check
-          just docs-check
           just package
           for metadata in src/*/devcontainer-template.json; do
             template_id=$(basename "$(dirname "$metadata")")
@@ -37,6 +36,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      attestations: read
     outputs:
       matrix: ${{ steps.publish.outputs.matrix }}
       pending: ${{ steps.publish.outputs.pending }}

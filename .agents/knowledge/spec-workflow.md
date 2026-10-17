@@ -27,15 +27,20 @@ without inventing a template domain.
    implementation-only commits preserve it. Approval evidence is a 90-day Actions artifact from a
    successful trusted approval workflow run; expiration requires a maintainer to reapply the label.
    Archive path normalization and task changes preserve the package identity. A label alone,
-   contributor-supplied comment, or approval by the implementing agent is not proof.
+   contributor-supplied comment, or approval by the implementing agent is not proof. Before
+   recording a new approval, automation requires the current PR head to match the label event's
+   head. If a push races that event, review the current commit and reapply the label.
 3. Only after approval, create tasks and implement. Official generated skills may offer all
    artifacts at once; stop before tasks to honor this project gate.
 4. Verify implementation, reconcile tasks and PR discussion, and mark ready for human review while
-   the change remains active. The archive gate blocks merging.
+   the change remains active. The archive gate blocks merging while active change files remain.
 5. After the maintainer explicitly confirms completion and directs archive, the branch holder syncs
    and archives in that same PR, reruns checks, and reports the resulting revision. Automation never
    performs archive. New behavior or package changes return to the relevant gate; do not reuse an
-   approval for changed work.
+   approval for changed work. The automatic archive check validates file placement and completed
+   tasks only. It does not authenticate an archive instruction. The branch holder must obtain that
+   instruction in the PR discussion, and the maintainer checks it during final review before
+   merging.
 6. The maintainer performs final review and merges. No independent second account approval is
    required in this single-maintainer repository.
 

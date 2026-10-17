@@ -26,7 +26,8 @@ validation section.
 
 Keep the active change available while the implementation is reviewed. After the maintainer confirms
 completion and explicitly directs archiving, sync and archive inside that PR and run checks again.
-The archive check blocks merge until then. See the
+The archive check verifies archived files and completed tasks. The maintainer verifies the explicit
+archive instruction during final review; the check itself cannot prove that authorization. See the
 [specification contract](.agents/knowledge/spec-workflow.md) for the exact gates and the initial
 bootstrap exception.
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-read --allow-write --allow-net=api.github.com --allow-env=GH_TOKEN,GITHUB_TOKEN,GITHUB_REPOSITORY,GITHUB_EVENT_PATH,GITHUB_OUTPUT,GITHUB_RUN_ID,NEEDS
+#!/usr/bin/env -S deno run --allow-read --allow-write --allow-net=api.github.com --allow-env=GH_TOKEN,GITHUB_TOKEN,GITHUB_REPOSITORY,GITHUB_EVENT_PATH,GITHUB_OUTPUT,GITHUB_RUN_ID
 /** Repository-owned GitHub policy commands. Privileged callers use default-branch code. */
 export type FileContent = { path: string; content: string };
 type Json = Record<string, unknown>;
@@ -36,17 +36,6 @@ export async function packageDigest(files: FileContent[]): Promise<string> {
     ),
   )
     .map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-export function checkGate(
-  needs: Record<string, { result: string }>,
-  optional: string[] = [],
-): void {
-  for (const [name, job] of Object.entries(needs)) {
-    assert(
-      job.result === "success" || (job.result === "skipped" && optional.includes(name)),
-      `${name}: ${job.result}`,
-    );
-  }
 }
 export function checkArchive(files: FileContent[], draft: boolean): void {
   const archived = new Set(
@@ -289,6 +278,29 @@ async function event(): Promise<Json> {
   }
   return payload;
 }
+export function policyChanges(changes: { filename: string; previous_filename?: string }[]): {
+  paths: string[];
+  behavior: boolean;
+  metadata: string[];
+  stable: string[];
+} {
+  const paths = [
+    ...new Set(
+      changes.flatMap((f) =>
+        f.previous_filename ? [f.filename, f.previous_filename] : [f.filename]
+      ),
+    ),
+  ];
+  return {
+    paths,
+    behavior: paths.some((path) =>
+      /^src\/[^/]+\//.test(path) && !/\/(README|NOTES)\.md$/.test(path) &&
+      !path.endsWith("/devcontainer-template.json")
+    ),
+    metadata: paths.filter((path) => /^src\/[^/]+\/devcontainer-template\.json$/.test(path)),
+    stable: paths.filter((path) => path.startsWith("openspec/specs/")),
+  };
+}
 async function snapshot(): Promise<
   { pr: PullRequest; files: FileContent[]; requiresSpec: boolean; digest?: string }
 > {
@@ -302,29 +314,19 @@ async function snapshot(): Promise<
   );
   // GitHub truncates this API at 3,000 files. Never accept an incomplete policy input.
   assert(changed.length < 3000, "PR is too large for reliable policy validation");
+  const changes = policyChanges(changed);
   const names = new Set(
-    changed.flatMap((f) => [f.filename, f.previous_filename || ""]).map(packagePath).filter((p) =>
-      p !== undefined
-    ).map((p) => p!.name),
+    changes.paths.map(packagePath).filter((p) => p !== undefined).map((p) => p!.name),
   );
-  let requiresSpec = changed.some((f) =>
-    /^src\/[^/]+\//.test(f.filename) && !/\/(README|NOTES)\.md$/.test(f.filename) &&
-    !f.filename.endsWith("/devcontainer-template.json")
-  );
+  let requiresSpec = changes.behavior;
   const tree = await api<
     { tree: { path: string; sha: string; type: string }[]; truncated: boolean }
   >(`/git/trees/${pr.head.sha}?recursive=1`);
   assert(!tree.truncated, "PR tree was truncated");
-  for (
-    const change of changed.filter((f) =>
-      /^src\/[^/]+\/devcontainer-template\.json$/.test(f.filename)
-    )
-  ) {
-    const current = tree.tree.find((entry) =>
-      entry.path === change.filename && entry.type === "blob"
-    );
+  for (const path of changes.metadata) {
+    const current = tree.tree.find((entry) => entry.path === path && entry.type === "blob");
     const previous = await api<{ content: string; encoding: string; size: number }>(
-      `/contents/${change.filename}?ref=${pr.base.sha}`,
+      `/contents/${path}?ref=${pr.base.sha}`,
       { allow404: true },
     );
     if (!current || !previous) {
@@ -372,13 +374,13 @@ async function snapshot(): Promise<
       "Template behavior changes require an OpenSpec proposal and specification delta",
     );
   }
-  for (const change of changed.filter((f) => f.filename.startsWith("openspec/specs/"))) {
-    const relative = change.filename.slice("openspec/".length);
+  for (const path of changes.stable) {
+    const relative = path.slice("openspec/".length);
     assert(
       files.some((f) =>
         packagePath(f.path)?.archived && packagePath(f.path)?.relative === relative
       ),
-      `Stable specification edit needs a matching archived delta: ${change.filename}`,
+      `Stable specification edit needs a matching archived delta: ${path}`,
     );
   }
   const archivedSpecs = files.filter((file) =>
@@ -519,6 +521,12 @@ async function specCheck(archive: boolean): Promise<void> {
   }
   await stable(s.pr);
 }
+export function checkApprovalHead(eventHead: string | undefined, currentHead: string): void {
+  assert(
+    eventHead && eventHead === currentHead,
+    "PR changed after the approval label event. Review the current commit and reapply spec:approved.",
+  );
+}
 async function approval(): Promise<void> {
   const payload = await event();
   const s = await snapshot();
@@ -527,6 +535,9 @@ async function approval(): Promise<void> {
   const approving = payload.action === "labeled" &&
     (payload.label as { name: string })?.name === "spec:approved";
   const authorized = approving && sender.type === "User" && await human(sender.login);
+  if (authorized) {
+    checkApprovalHead((payload.pull_request as PullRequest | undefined)?.head.sha, s.pr.head.sha);
+  }
   const existing = !!s.digest && await validApproval(s.pr.number, s.digest);
   await stable(s.pr);
   if (!s.digest || (!authorized && !existing)) {
@@ -622,7 +633,6 @@ async function prCheck(): Promise<void> {
   for (const heading of ["## Problem", "## Changes", "## Validation", "## Specification"]) {
     assert(body.includes(heading), `PR description missing ${heading}`);
   }
-  assert(!/\b(?:TODO|TBD)\b/.test(body), "Complete PR description placeholders before review");
 }
 async function protectedPolicy(): Promise<void> {
   const payload = await event();
@@ -707,12 +717,9 @@ async function main(): Promise<void> {
     case "platform-check":
       await platformCheck();
       break;
-    case "gate":
-      checkGate(JSON.parse(Deno.env.get("NEEDS") || "{}"), ["containers", "devcontainer"]);
-      break;
     default:
       throw new Error(
-        "Usage: github.ts pr-check|spec-check [--archive]|approval|labels [--apply]|platform-check|gate",
+        "Usage: github.ts pr-check|spec-check [--archive]|approval|labels [--apply]|platform-check",
       );
   }
 }

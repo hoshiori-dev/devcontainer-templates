@@ -184,7 +184,7 @@ function canonical(value: unknown): string {
   }
   return JSON.stringify(value);
 }
-async function sourceMatches(
+export async function sourceMatches(
   item: Metadata,
   remote: Awaited<ReturnType<typeof manifest>>,
 ): Promise<void> {
@@ -259,6 +259,21 @@ async function sourceTag(tag: string): Promise<string | undefined> {
   const text = await command(["git", "ls-remote", "--tags", "origin", `refs/tags/${tag}`]);
   return text ? text.split(/\s/)[0] : undefined;
 }
+async function verifyProvenance(item: ReleaseItem, repository: string): Promise<void> {
+  await command([
+    "gh",
+    "attestation",
+    "verify",
+    `oci://${item.name}@${item.digest}`,
+    "--repo",
+    repository,
+    "--signer-workflow",
+    `${repository}/.github/workflows/release.yml`,
+    "--source-digest",
+    item.source,
+    "--deny-self-hosted-runners",
+  ]);
+}
 async function prepare(): Promise<void> {
   const { repository, sha } = await guard();
   const eventPath = Deno.env.get("GITHUB_EVENT_PATH");
@@ -273,6 +288,7 @@ async function prepare(): Promise<void> {
   const metadata = await validate(Deno.cwd(), before);
   // Preflight every existing source tag before any irreversible registry write.
   const existingTags = new Map<string, string>();
+  const verifiedDigests = new Map<string, string>();
   for (const item of metadata) {
     const tag = `${item.id}/v${item.version}`;
     const existing = await sourceTag(tag);
@@ -291,6 +307,16 @@ async function prepare(): Promise<void> {
       !changed,
       `${tag} is already released with different template source; increment its version`,
     );
+    const remote = await manifest(`${repository}/${item.id}`, item.version);
+    await sourceMatches(item, remote);
+    await verifyProvenance({
+      id: item.id,
+      version: item.version,
+      name: `ghcr.io/${repository}/${item.id}`,
+      digest: remote.digest,
+      source: existing,
+    }, repository);
+    verifiedDigests.set(item.id, remote.digest);
     existingTags.set(item.id, existing);
   }
   const text = await command([
@@ -312,7 +338,13 @@ async function prepare(): Promise<void> {
     if (result[item.id].digest) {
       assert(result[item.id].digest === remote.digest, "CLI and registry digest disagree");
     }
-    if (existing) continue;
+    if (existing) {
+      assert(
+        remote.digest === verifiedDigests.get(item.id),
+        "Existing published manifest changed after source and provenance verification",
+      );
+      continue;
+    }
     await sourceMatches(item, remote);
     pending.push({
       id: item.id,
@@ -347,19 +379,7 @@ async function provenance(item: ReleaseItem): Promise<void> {
     await emit("needed", "true");
     return;
   }
-  await command([
-    "gh",
-    "attestation",
-    "verify",
-    `oci://${item.name}@${item.digest}`,
-    "--repo",
-    repository,
-    "--signer-workflow",
-    `${repository}/.github/workflows/release.yml`,
-    "--source-digest",
-    sha,
-    "--deny-self-hosted-runners",
-  ]);
+  await verifyProvenance(item, repository);
   await emit("needed", "false");
 }
 async function tag(item: ReleaseItem): Promise<void> {
@@ -371,19 +391,7 @@ async function tag(item: ReleaseItem): Promise<void> {
   );
   const current = await manifest(`${repository}/${item.id}`, item.version);
   assert(current.digest === item.digest, "Published manifest changed before tagging");
-  await command([
-    "gh",
-    "attestation",
-    "verify",
-    `oci://${item.name}@${item.digest}`,
-    "--repo",
-    repository,
-    "--signer-workflow",
-    `${repository}/.github/workflows/release.yml`,
-    "--source-digest",
-    sha,
-    "--deny-self-hosted-runners",
-  ]);
+  await verifyProvenance(item, repository);
   const name = `${item.id}/v${item.version}`;
   const existing = await sourceTag(name);
   if (existing) {
@@ -402,7 +410,8 @@ async function publicVerify(): Promise<void> {
     await Deno.writeTextFile(`${temp}/docker/config.json`, "{}\n");
     for (const item of metadata) {
       // Token exchange deliberately has no Authorization header.
-      await manifest(`${repository}/${item.id}`, item.version, false);
+      const remote = await manifest(`${repository}/${item.id}`, item.version, false);
+      await sourceMatches(item, remote);
       const workspace = `${temp}/${item.id}`;
       await Deno.mkdir(workspace);
       await command(
@@ -413,7 +422,7 @@ async function publicVerify(): Promise<void> {
           "--workspace-folder",
           workspace,
           "--template-id",
-          `ghcr.io/${repository}/${item.id}:${item.version}`,
+          `ghcr.io/${repository}/${item.id}@${remote.digest}`,
         ],
         false,
         {

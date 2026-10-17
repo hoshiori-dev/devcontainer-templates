@@ -21,8 +21,8 @@ Stage explicit paths.
 Open a draft PR early. Its description names the user-visible result, linked Issue and spec change
 where applicable, checks with evidence, and remaining limitations. Use the repository PR template.
 Keep the description current as scope settles. For spec work, ready means implementation is
-reviewable, while the archive check intentionally blocks merge until the maintainer's completion
-decision.
+reviewable, while the archive check blocks merge until active changes are archived and tasks are
+complete. Human authorization to archive is checked during final review, not proven by that check.
 
 PR CI uses read-only credentials and tests contributor content without repository secrets.
 Privileged label and approval jobs execute only trusted default-branch code and read contributor
@@ -32,4 +32,5 @@ with write credentials.
 A maintainer's merge of a template version change authorizes automatic publication from that exact
 `main` commit. Publication creates per-template source tags and provenance after registry
 distribution. Reruns reuse existing published versions; fixes use a higher version. Publication
-failure is not permission to force-move tags.
+failure is not permission to force-move tags. Existing versions are verified against source and
+attestations bound to their original source-tag commit before publication can proceed.
