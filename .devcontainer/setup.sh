@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-bash scripts/setup-tools.sh
+npm install --global @devcontainers/cli@latest
+pre-commit install --install-hooks

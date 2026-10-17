@@ -5,7 +5,7 @@ default:
     @just --list
 
 # All local checks CI runs without template containers.
-check: lint scripts-check validate spec-check docs-check
+check base="origin/main": lint scripts-check (validate base) spec-check docs-check
 
 lint:
     deno fmt --check
@@ -14,7 +14,7 @@ lint:
 scripts-check:
     deno check scripts/*.ts
     deno lint
-    ./scripts/test.sh
+    for test_script in scripts/*_test.ts; do "./$test_script"; done
 
 validate base="origin/main":
     ./scripts/template.ts validate --base "$1"

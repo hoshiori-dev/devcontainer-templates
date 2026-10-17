@@ -63,6 +63,8 @@ Deno.test("affected selection handles shared infrastructure and documents", () =
     const path of [
       "scripts/template.ts",
       ".github/workflows/ci.yml",
+      ".github/actions/setup-tools/action.yml",
+      ".github/actions/setup-deno/action.yml",
       "test/lib/helper.sh",
       ".devcontainer/devcontainer.json",
     ]

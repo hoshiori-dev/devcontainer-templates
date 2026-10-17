@@ -4,17 +4,17 @@ Read when running or changing validation or diagnosing CI failures. The justfile
 own executable commands; workflows select their platforms and permissions. Tests belong to project
 scripts, not skill directories.
 
-Run `just check` before review. Run `just test <id>` for each changed template on a Docker-capable
-Linux host. `just affected` uses the comparison base to select changed templates; shared test,
-script, or workflow changes must test all templates. CI repeats real template tests on native Linux
-amd64 and arm64 runners. A local amd64 pass is evidence for amd64 only; report other execution as
-pending CI.
+Run `just check` before review; CI passes its exact PR base as `just check <base>`. Run
+`just test <id>` for each changed template on a Docker-capable Linux host. `just affected` uses the
+comparison base to select changed templates; shared test, script, shared Action, or workflow changes
+must test all templates. CI repeats real template tests on native Linux amd64 and arm64 runners. A
+local amd64 pass is evidence for amd64 only; report other execution as pending CI.
 
 Container tests publish a package to a temporary local OCI registry, apply the published reference
-to an empty temporary project, start the resulting development container, and execute
-`test/<id>/test.sh` inside it. Assert observable requirements from the spec, including the user and
-OS, rather than the spelling of the config. Tests must fail when publication, apply, startup, or an
-assertion fails.
+by its verified manifest digest to an empty temporary project, start the resulting development
+container, and execute `test/<id>/test.sh` inside it. Assert observable requirements from the spec,
+including the user and OS, rather than the spelling of the config. Tests must fail when publication,
+apply, startup, or an assertion fails.
 
 The current Ubuntu test creates no named volumes. When adding a template with named volumes, extend
 test isolation first: allocate run-specific names and ownership labels and remove only those names.

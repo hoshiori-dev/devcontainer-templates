@@ -18,9 +18,5 @@
         "no-import-prefix"
       ]
     }
-  },
-  "tasks": {
-    "check": "just check",
-    "test": "./scripts/test.sh"
   }
 }

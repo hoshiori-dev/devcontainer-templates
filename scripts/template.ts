@@ -124,13 +124,14 @@ async function command(
     stderr: quiet ? "piped" : "inherit",
     signal,
   }).output();
+  const stdout = decoder.decode(result.stdout).trim();
   assert(
     result.success,
-    `Command failed (${result.code}): ${args.join(" ")}${
+    `Command failed (${result.code}): ${args.join(" ")}\n${stdout}${
       quiet ? `\n${decoder.decode(result.stderr)}` : ""
     }`,
   );
-  return decoder.decode(result.stdout).trim();
+  return stdout;
 }
 async function exists(path: string): Promise<boolean> {
   try {
@@ -160,7 +161,6 @@ async function files(root: string, prefix = ""): Promise<string[]> {
   return result.sort();
 }
 export async function changedPaths(root: string, base: string): Promise<string[]> {
-  await command(["git", "rev-parse", "--verify", `${base}^{commit}`], root, true);
   // Include staged, unstaged, and new files so local checks match the next commit.
   const tracked = await command(["git", "diff", "--name-only", "-z", base, "--"], root, true);
   const untracked = await command(
@@ -173,7 +173,7 @@ export async function changedPaths(root: string, base: string): Promise<string[]
 export function selectAffected(paths: string[], all: string[]): string[] {
   if (
     paths.some((p) =>
-      /^(scripts\/|\.github\/workflows\/|\.devcontainer\/|deno\.jsonc?$|tools\.json$|justfile$|\.pre-commit-config\.yaml$)/
+      /^(scripts\/|\.github\/(workflows|actions)\/|\.devcontainer\/|deno\.jsonc?$|justfile$|\.pre-commit-config\.yaml$)/
         .test(p) || (p.startsWith("test/") && !all.some((id) => p.startsWith(`test/${id}/`)))
     )
   ) return all;
@@ -185,10 +185,6 @@ export function selectAffected(paths: string[], all: string[]): string[] {
   );
 }
 export function requireVersionIncrease(oldVersion: string, newVersion: string): void {
-  assert(
-    validateStrict(oldVersion) && validateStrict(newVersion),
-    "Invalid version for comparison",
-  );
   assert(
     compareVersions(newVersion, oldVersion) > 0,
     `Template payload changed: increment version above ${oldVersion}`,
@@ -213,7 +209,7 @@ export async function validate(root: string, base?: string): Promise<Metadata[]>
     const options = (metadata.options ?? {}) as Record<string, unknown>;
     for (const file of await files(directory)) {
       assert(!/(^|\/)(\.git|node_modules|\.env)(\/|$)/.test(file), `Unpublishable path: ${file}`);
-      const content = await Deno.readTextFile(`${directory}/${file}`).catch(() => "");
+      const content = await Deno.readTextFile(`${directory}/${file}`);
       for (const match of content.matchAll(/\$\{templateOption:([^}]+)\}/g)) {
         assert(match[1] in options, `${id}: undeclared template option ${match[1]}`);
       }
@@ -300,8 +296,7 @@ export async function packageTemplates(root: string, id?: string): Promise<strin
   const output = `${root}/build/package-${crypto.randomUUID()}`;
   await Deno.mkdir(output, { recursive: true });
   const selected = templates.filter((t) => !id || t.id === id);
-  // CLI 0.89 exposes publish but no standalone package subcommand. Keep the
-  // documented distribution format available for local inspection and attestation.
+  // Package the distribution format directly for local inspection.
   await Deno.writeTextFile(
     `${output}/devcontainer-collection.json`,
     `${
@@ -328,35 +323,15 @@ export async function packageTemplates(root: string, id?: string): Promise<strin
       ".",
     ], root);
   }
-  const collection = JSON.parse(await Deno.readTextFile(`${output}/devcontainer-collection.json`));
-  assert(
-    Array.isArray(collection.templates) && collection.templates.length === selected.length,
-    "Invalid packaged collection",
-  );
   for (const metadata of selected) {
-    assert(
-      collection.templates.some((t: Metadata) =>
-        t.id === metadata.id && t.version === metadata.version
-      ),
-      `Missing packaged metadata: ${metadata.id}`,
-    );
     const entries =
       (await command(["tar", "-tzf", `${output}/devcontainer-template-${metadata.id}.tgz`], root))
-        .split("\n").map((p) => p.replace(/^\.\//, "").replace(/\/$/, ""));
+        .split("\n").filter((p) => !p.endsWith("/")).map((p) => p.replace(/^\.\//, "")).sort();
     const sourceFiles = await files(`${root}/src/${metadata.id}`);
-    for (const entry of entries) {
-      assert(
-        !entry.startsWith("/") && !entry.split("/").includes(".."),
-        `Unsafe archive path: ${entry}`,
-      );
-      assert(
-        !entry || sourceFiles.some((file) => file === entry || file.startsWith(`${entry}/`)),
-        `Archive contains unexpected payload: ${entry}`,
-      );
-    }
-    for (const file of sourceFiles) {
-      assert(entries.includes(file), `Missing archive file: ${file}`);
-    }
+    assert(
+      JSON.stringify(entries) === JSON.stringify(sourceFiles),
+      `Packaged files differ from src/${metadata.id}`,
+    );
   }
   return output;
 }
@@ -412,6 +387,20 @@ export async function testTemplate(root: string, id: string): Promise<void> {
       "--namespace",
       "test/templates",
     ]);
+    const manifest = await fetch(
+      `http://${address}/v2/test/templates/${id}/manifests/${metadata.version}`,
+      {
+        headers: { Accept: "application/vnd.oci.image.manifest.v1+json" },
+        signal: controller.signal,
+      },
+    );
+    assert(manifest.ok, "Cannot fetch locally published manifest");
+    const manifestBytes = await manifest.arrayBuffer();
+    const digest = `sha256:${
+      Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", manifestBytes)))
+        .map((b) => b.toString(16).padStart(2, "0")).join("")
+    }`;
+    assert(manifest.headers.get("docker-content-digest") === digest, "Manifest digest mismatch");
     await run([
       "devcontainer",
       "templates",
@@ -419,7 +408,7 @@ export async function testTemplate(root: string, id: string): Promise<void> {
       "--workspace-folder",
       workspace,
       "--template-id",
-      `${registry}/test/templates/${id}:${metadata.version}`,
+      `${registry}/test/templates/${id}@${digest}`,
     ]);
     // The registry shares the ownership label; select only the workspace container for CLI reuse.
     const workspaceLabel = "devcontainer-templates.role=workspace";

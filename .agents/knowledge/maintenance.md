@@ -5,21 +5,35 @@ periodic consistency review. The changing source's PR author owns updating its d
 same PR. Scripts and workflows own executable facts; knowledge files own operating conventions;
 OpenSpec owns template behavior.
 
-The development container uses the latest Betterleaks, Deno, OpenSpec and uv releases, with
-unconstrained pre-commit and rust-just packages supplied by its Features. Local post-create setup
-preserves these tools. `tools.json` pins their CI installations separately; the Dev Container CLI
-and Node settings follow their existing pins.
+Management code serves developers. Rely on the configured workspace, installed Features, and tool
+errors instead of adding directory recovery, fallback paths, or duplicate checks for controlled
+inputs. Validate repository contracts and external trust boundaries; do not hide unexpected failures
+or add general compatibility layers for environments this project does not use.
+
+Development container Features use their default versions; CI tools follow the latest stable
+releases. Features supply the container tools; `.devcontainer/setup.sh` installs the CLI and hooks.
+The composite Action in `.github/actions/setup-tools/` owns CI tool installation, using setup
+Actions for Node, Deno, and uv and inline Shell commands for the remaining tools. CI records actual
+tool versions so compatibility failures can be traced to the installed releases. Do not introduce a
+central version list or silently downgrade on an upgrade failure. Fix or discuss the
+incompatibility. External Actions remain pinned to reviewed commit SHAs.
+
+Betterleaks setup resolves one stable release and verifies its architecture-specific archive with
+that release's published SHA-256 checksum. This detects corrupted downloads but still trusts the
+upstream release account. npm and uv also trust upstream dependencies. Latest tools and disabled
+Deno lockfiles deliberately do not provide a frozen dependency graph.
 
 Deno entrypoints are executable scripts whose shebangs own their runtime permissions. Invoke them
 directly from recipes and workflows; changing an entrypoint's capabilities requires updating its
 shebang. Pure test files need no permissions; resource-using tests declare their own. Run the suite
-through `scripts/test.sh`. Deno lockfiles are disabled; imports retain explicit dependency versions.
+through `just scripts-check`. Deno lockfiles are disabled; imports retain explicit dependency
+versions.
 
 | Trigger/source                                   | Update and verify                                                                                                     |
 | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
 | Template metadata, NOTES, or published files     | Increment the affected version, regenerate docs, run docs-check, compare the spec, and run its real container test.   |
 | Test or packaging script and CLI flags           | Update testing knowledge and template skill; run script tests and full affected selection.                            |
-| justfile or tool pins                            | Update entrypoint and contributing commands; verify documented commands in the development container.                 |
+| justfile or tool setup                           | Update entrypoint and contributing commands; verify documented commands in the development container.                 |
 | GitHub events, checks, approval, or release code | Update workflow and spec contracts, GitHub skill, and platform checklist; test trust boundaries and negative cases.   |
 | Knowledge or skill procedure                     | Check each referenced path/command against source and its trigger in AGENTS.md; update Claude links if a skill moves. |
 | Root user instructions                           | Review the English and Chinese README together; regenerate only the marked template indexes.                          |

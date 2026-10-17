@@ -28,7 +28,7 @@ jobs:
           ids=$(./scripts/template.ts affected --base "$BASE_SHA")
           printf 'ids=%s\n' "$ids" >> "$GITHUB_OUTPUT"
           changed_paths=$(git diff --name-only "$BASE_SHA" HEAD)
-          if grep -Eq '^(\.devcontainer/|tools\.json$|scripts/setup-tools\.sh$|\.github/actions/setup-tools/|\.github/workflows/ci\.yml$)' <<< "$changed_paths"; then
+          if grep -Eq '^(\.devcontainer/|\.github/actions/setup-(tools|deno)/|\.github/workflows/ci\.yml$)' <<< "$changed_paths"; then
             echo 'devcontainer=true' >> "$GITHUB_OUTPUT"
           else
             echo 'devcontainer=false' >> "$GITHUB_OUTPUT"
@@ -44,9 +44,7 @@ jobs:
       - env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          just check
-          ./scripts/template.ts validate --base "$BASE_SHA"
-          just docs-check
+          just check "$BASE_SHA"
           just package
   betterleaks:
     runs-on: ubuntu-24.04

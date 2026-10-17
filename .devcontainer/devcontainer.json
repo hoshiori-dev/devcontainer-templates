@@ -13,23 +13,15 @@
     "ghcr.io/hoshiori-dev/devcontainer-features/apt-packages:1": {
       "packages": "shellcheck"
     },
-    "ghcr.io/hoshiori-dev/devcontainer-features/betterleaks:1": {
-      "version": "latest"
-    },
-    "ghcr.io/hoshiori-dev/devcontainer-features/deno:1": {
-      "version": "latest"
-    },
+    "ghcr.io/hoshiori-dev/devcontainer-features/betterleaks:1": {},
+    "ghcr.io/hoshiori-dev/devcontainer-features/deno:1": {},
     "ghcr.io/hoshiori-dev/devcontainer-features/openspec:1": {
-      "version": "latest",
       "disableTelemetry": true
     },
     "ghcr.io/hoshiori-dev/devcontainer-features/uv:1": {
-      "version": "latest",
       "toolsToInstall": "pre-commit,rust-just"
     },
-    "ghcr.io/devcontainers/features/node:2": {
-      "version": "24"
-    }
+    "ghcr.io/devcontainers/features/node:2": {}
   },
   "remoteUser": "vscode",
   "postCreateCommand": "bash .devcontainer/setup.sh",

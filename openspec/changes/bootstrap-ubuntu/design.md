@@ -25,11 +25,12 @@ in an applied container.
 
 ### Distribution and checks
 
-Use the pinned Dev Container CLI for package/publish/apply. Tests use isolated local registries and
-resource names, then assert real container behavior. CI uses native amd64 and arm64. Generated
-documentation derives from metadata and NOTES. Release from the exact merged `main` revision,
-preserve published versions, and record matching source tags and provenance. A failed release is
-repaired by retry or a higher patch version, never by overwriting an existing published version.
+Use the latest stable Dev Container CLI for publish/apply and tar for local packaging. Tests use
+isolated local registries and resource names, then assert real container behavior. CI uses native
+amd64 and arm64. Generated documentation derives from metadata and NOTES. Release from the exact
+merged `main` revision, preserve published versions, and record matching source tags and provenance.
+A failed release is repaired by retry or a higher patch version, never by overwriting an existing
+published version.
 
 ### Approval and trust
 
