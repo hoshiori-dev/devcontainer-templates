@@ -242,7 +242,15 @@ export async function sourceMatches(
       canonical(normalized) === canonical(metadata),
       `Published metadata differs from ${item.id}:${item.version}; use a higher repair version`,
     );
-    for (const file of sourceFiles.filter((p) => p !== "devcontainer-template.json")) {
+    for (const file of sourceFiles) {
+      const sourceMode = (await Deno.stat(`${source}/${file}`)).mode!;
+      const remoteMode = (await Deno.stat(`${extracted}/${file}`)).mode!;
+      // Git records the owner-executable flag, not the full permission set.
+      assert(
+        (sourceMode & 0o100) === (remoteMode & 0o100),
+        `Published executable flag differs: ${item.id}/${file}; use a higher repair version`,
+      );
+      if (file === "devcontainer-template.json") continue;
       const expected = await Deno.readFile(`${source}/${file}`);
       const actual = await Deno.readFile(`${extracted}/${file}`);
       assert(
@@ -286,7 +294,7 @@ async function prepare(): Promise<void> {
   await command(["git", "cat-file", "-e", `${before}^{commit}`]);
   await command(["git", "merge-base", "--is-ancestor", before, sha]);
   const metadata = await validate(Deno.cwd(), before);
-  // Preflight every existing source tag before any irreversible registry write.
+  // Verify existing versions reused by this publication before any registry write.
   const existingTags = new Map<string, string>();
   const verifiedDigests = new Map<string, string>();
   for (const item of metadata) {

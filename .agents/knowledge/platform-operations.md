@@ -61,10 +61,12 @@ temporary project, start the container, and run its assertions. Record the refer
 digest, architecture, and outcome. Repeat on the second native architecture. Never expose
 credentials while demonstrating anonymous access.
 
-Release preflight checks every existing version's source files and attestation against its original
-source-tag commit. It refuses missing or mismatched provenance rather than skipping existing tags.
-Anonymous verification checks the package source and applies its resolved digest, so a concurrent
-version-tag change cannot substitute the artifact being consumed.
+Release preflight checks existing versions reused by the current publication: source files,
+Git-style executable flags, and attestations bound to their original source-tag commits. It refuses
+missing or mismatched provenance for those versions. It does not audit every historical release or
+block new versions on unrelated historical artifacts. Anonymous verification checks the package
+source and applies its resolved digest, so a concurrent version-tag change cannot substitute the
+artifact being consumed.
 
 For discovery beyond GHCR, consult the current
 [Dev Container collection index](https://github.com/devcontainers/devcontainers.github.io)

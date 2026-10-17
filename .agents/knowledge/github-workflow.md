@@ -32,5 +32,6 @@ with write credentials.
 A maintainer's merge of a template version change authorizes automatic publication from that exact
 `main` commit. Publication creates per-template source tags and provenance after registry
 distribution. Reruns reuse existing published versions; fixes use a higher version. Publication
-failure is not permission to force-move tags. Existing versions are verified against source and
-attestations bound to their original source-tag commit before publication can proceed.
+failure is not permission to force-move tags. Existing versions reused by the current publication
+are verified against source, Git-style executable flags, and attestations bound to their original
+source-tag commits before publication can proceed.
