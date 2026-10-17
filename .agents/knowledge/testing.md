@@ -32,3 +32,12 @@ failed results cannot be interpreted as green.
 For unavailable Docker, architecture runners, GHCR permissions, or GitHub checks, record the exact
 missing verification. Package creation alone does not prove public anonymous consumption.
 Publication verification is in the platform operations guide.
+
+## Secret checks
+
+Betterleaks scans staged changes in pre-commit and PR-added commits in the `betterleaks` CI job. The
+independent `.github/workflows/secret.yml` runs TruffleHog on PR-added commits and pushes to `main`.
+Its `secret-scan` check fails for `verified` and `unknown` results: live credentials and
+verification errors. The scanner reads Git content without executing repository code and uses a
+read-only token. Keep its action SHA and container digest pinned; when changing them, inspect the
+upstream action and verify the image digest together.

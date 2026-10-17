@@ -48,7 +48,7 @@ jobs:
           ./scripts/template.ts validate --base "$BASE_SHA"
           just docs-check
           just package
-  secret-scan:
+  betterleaks:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -94,7 +94,7 @@ jobs:
           runCmd: just check
   ci-gate:
     if: always()
-    needs: [changes, checks, secret-scan, containers, devcontainer]
+    needs: [changes, checks, betterleaks, containers, devcontainer]
     runs-on: ubuntu-24.04
     steps:
       - name: Reject failed, cancelled, or unexpectedly skipped checks
