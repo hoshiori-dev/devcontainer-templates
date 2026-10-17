@@ -8,10 +8,10 @@
 ## 2. Verification and review
 
 - [x] 2.1 Run static and negative-case script checks and validate this OpenSpec change.
-- [ ] 2.2 Exercise registry publish/apply/start/assert on native amd64 and arm64 (local amd64
-      passed; arm64 awaits PR CI).
+- [x] 2.2 Exercise registry publish/apply/start/assert on native amd64 and arm64 (both native PR CI
+      jobs passed).
 - [x] 2.3 Independently read the deposited harness and reconcile its commands and gates.
-- [ ] 2.4 Prepare the draft PR with initial user-approval evidence and verification limits.
+- [x] 2.4 Prepare the draft PR with initial user-approval evidence and verification limits.
 - [ ] 2.5 Wait for maintainer completion confirmation and explicit archive instruction.
 - [ ] 2.6 Prepare the final verified revision for archive and human merge.
 

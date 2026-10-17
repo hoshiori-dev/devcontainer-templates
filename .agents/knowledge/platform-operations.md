@@ -37,7 +37,9 @@ it as an unresolved finding. Organization settings remain outside scope.
   deletion and force-push; permit the single maintainer's final review and merge.
 - In Settings → Code security, inspect and enable available secret scanning and push protection.
   Confirm alerts and protection state rather than inferring from the repository being public. Review
-  code scanning results from the checked-in workflow and enable the applicable CodeQL configuration.
+  code scanning results from the existing CodeQL default setup. Do not add an advanced workflow
+  alongside default setup: GitHub rejects its SARIF upload. This was observed during bootstrap;
+  querying default-setup configuration with the current integration still returns 403.
 - Ensure workflow package-write and provenance permissions match the release YAML. Check
   organization package policy if GHCR access is denied.
 
