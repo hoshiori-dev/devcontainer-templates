@@ -36,8 +36,8 @@ it as an unresolved finding. Organization settings remain outside scope.
 
 - In Settings → General → Pull Requests, allow squash and delete merged branches.
 - In Settings → Rules → Rulesets (or Branches), protect `main` after bootstrap: require PRs and the
-  observed `ci-gate`, `protected-policy`, `spec-archived`, and `secret-scan` checks; block branch
-  deletion and force-push; permit the single maintainer's final review and merge.
+  observed `ci-gate`, `spec-archived`, and `secret-scan` checks; block branch deletion and
+  force-push; permit the single maintainer's final review and merge.
 - In Settings → Code security, inspect and enable available secret scanning and push protection.
   Confirm alerts and protection state rather than inferring from the repository being public. Review
   code scanning results from the existing CodeQL default setup. Do not add an advanced workflow
@@ -46,11 +46,16 @@ it as an unresolved finding. Organization settings remain outside scope.
 - Ensure workflow package-write and provenance permissions match the release YAML. Check
   organization package policy if GHCR access is denied.
 
-The protected policy workflow reads only trusted default-branch code and posts checks on the PR
-head. GitHub Actions check names alone cannot establish which workflow produced a result. The
-maintainer must inspect changes to workflows and approval code before merging; this repository does
-not claim organization-level required-workflow enforcement. Tokens used by an agent can represent a
-human account, so account permissions supplement, rather than replace, the agent authority policy.
+After this simplification is merged and the replacement checks have run, remove `protected-policy`
+from the existing ruleset and read it back. Keep it configured until then; approval automation is
+advisory and must not become a required check. The earlier bootstrap readback above records the old
+check names, not the desired final configuration.
+
+The archive workflow reads only trusted default-branch code and posts its check on the PR head.
+GitHub Actions check names alone cannot establish which workflow produced a result. The maintainer
+must inspect changes to workflows and approval code before merging; this repository does not claim
+organization-level required-workflow enforcement. Tokens used by an agent can represent a human
+account, so account permissions supplement, rather than replace, the agent authority policy.
 
 ## Verify the first release
 

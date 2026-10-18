@@ -43,13 +43,13 @@ unless the user requests another language. The root README also has a Chinese tr
   ready for human review under the authority contract.
 - A maintainer approves specifications and merges. Agents never approve their own specifications,
   merge, manually release, or expand their own permissions.
-- Template behavior changes require the specification approval gate before tasks and implementation.
-  Read the specification contract even when an operation skill offers to generate all artifacts at
-  once.
-- Finished spec changes remain active for review. Archive inside the same PR only after the
+- Every `src/` or `test/` PR includes a specification edit. Template behavior changes require human
+  specification approval before tasks and implementation; approval labels assist review. Read the
+  specification contract even when an operation skill offers to generate all artifacts at once.
+- Finished spec changes remain active for review. Archive in the final PR into `main` only after the
   maintainer explicitly confirms completion and directs archiving.
-- The archive merge check intentionally remains pending or failing during that review. Report this
-  expected gate separately from implementation failures.
+- The archive merge check blocks PRs into `main` during that review; feature-branch PRs may carry
+  active changes. Report this expected gate separately from implementation failures.
 - Stop dependent work and ask the maintainer when acceptance is unclear, scope expands, required
   checks cannot run, or an authority boundary is reached.
 - Keep credentials and personal data out of commits, logs, examples, and reports. Use secret storage
@@ -61,7 +61,8 @@ unless the user requests another language. The root README also has a Chinese tr
 
 Run `just --list` for exact recipe arguments. The repository commands are:
 
-- `just check`: static validation, specs, documentation freshness, and script tests.
+- `just check`: static validation, PR specification changes, specs, documentation, and script tests.
+- `just pr-check <base>`: check specification changes against the actual PR target.
 - `just test ubuntu`: registry publish/apply and real container assertions.
 - `just affected`: print template IDs affected by the comparison base.
 - `just docs` / `just docs-check`: generate / verify template documentation.

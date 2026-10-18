@@ -7,8 +7,9 @@ description: Develops and verifies this repository's Dev Container Templates. Us
 
 Resolve all project paths from the repository root. This skill is repository-local.
 
-1. Read `.agents/knowledge/templates.md` and the affected template's current metadata and spec. For
-   changed behavior, read the `.agents/knowledge/spec-workflow.md`; publish the package for approval
+1. Read `.agents/knowledge/templates.md`, `.agents/knowledge/spec-workflow.md`, and the affected
+   template's current metadata and spec. Every `src/` or `test/` PR includes a specification edit. For
+   changed behavior, publish the package for human approval
    before tasks or implementation. Apply only after approval.
 2. Keep published content under `src/<id>/` and assertions under `test/<id>/`. Check official
    image/Feature compatibility and native architectures. Select the per-template SemVer increment
@@ -20,7 +21,7 @@ Resolve all project paths from the repository root. This skill is repository-loc
    `just package`, and `just test <id>`. Read `.agents/knowledge/testing.md` for unavailable Docker
    or native architecture coverage; record missing checks accurately.
 5. Update tasks and the PR's results and limitations. Keep an active change for review; sync and
-   archive only after the maintainer's explicit completion and archive instruction. Rerun checks and
+   archive in the final PR into `main` only after the maintainer's explicit completion and archive instruction. Rerun checks and
    report the revision for final review.
 
 Done when: the approved behavior has assertions, generated docs match their inputs, required checks

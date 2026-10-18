@@ -18,18 +18,26 @@ not edit generated documentation directly.
 
 ## Specifications and review
 
-Template behavior changes use OpenSpec in one draft PR. First submit the proposal, specification
-delta, and design where needed. A human maintainer approves that package using `spec:approved`;
-trusted automation binds approval to its content. Create tasks and implement after approval.
-Ordinary documentation, tooling, and non-behavior dependency updates use the PR acceptance and
-validation section.
+Every PR changing `src/` or `test/` must include an added or modified OpenSpec `spec.md`. Existing
+specs without edits, proposal/design/tasks files alone, and deleted specs do not satisfy this check.
+Maintainers review whether the specification covers the implementation.
+
+Template behavior changes start with OpenSpec in a draft PR. First submit the proposal,
+specification delta, and design where needed. A human maintainer approves that package in
+discussion; the optional `spec:approved` label tracks approval against its content. Missing labels
+or approval automation failures do not block merging. Create tasks and implement after approval.
+Small management, harness, knowledge typo, and dependency updates outside `src/` and `test/` can use
+PR discussion and validation without a spec when they fit existing contracts. Discuss substantive
+contract changes first.
 
 Keep the active change available while the implementation is reviewed. After the maintainer confirms
-completion and explicitly directs archiving, sync and archive inside that PR and run checks again.
-The archive check verifies archived files and completed tasks. The maintainer verifies the explicit
-archive instruction during final review; the check itself cannot prove that authorization. See the
-[specification contract](.agents/knowledge/spec-workflow.md) for the exact gates and the initial
-bootstrap exception.
+completion and explicitly directs archiving, sync and archive in the final PR into `main` and rerun
+checks. Split PRs may target a short-lived feature branch and carry active changes; each still needs
+its own spec edit when changing `src/` or `test/`. The final PR into `main` must archive the change.
+The archive check verifies archived files and completed tasks only when targeting `main`. The
+maintainer verifies the explicit archive instruction during final review; the check itself cannot
+prove that authorization. See the [specification contract](.agents/knowledge/spec-workflow.md) for
+the exact gates and the initial bootstrap exception.
 
 Use short feature branches from `main`, preferably named `<issue-number>-<description>`. Keep PRs
 focused and describe the resulting behavior, validation, and limitations. Commit messages use

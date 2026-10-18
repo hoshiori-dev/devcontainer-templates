@@ -1,4 +1,4 @@
-name: Trusted pull request policy
+name: Specification archive check
 on:
   pull_request_target:
     types: [
@@ -8,16 +8,11 @@ on:
       edited,
       ready_for_review,
       converted_to_draft,
-      labeled,
-      unlabeled,
     ]
-  workflow_run:
-    workflows: [Record human specification approval]
-    types: [completed]
 permissions:
   contents: read
 concurrency:
-  group: "${{ github.workflow }}-${{ github.event.workflow_run.display_title || format('Specification approval #{0}', github.event.pull_request.number) }}"
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 jobs:
   policy-dispatch:
@@ -25,10 +20,9 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-      actions: read
       checks: write
     steps:
-      # Both triggers load only default-branch policy. PR content is API data.
+      # Load only default-branch code. PR content is API data.
       # Explicit check-runs target the PR head SHA rather than the base event SHA.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -37,4 +31,4 @@ jobs:
       - uses: ./.github/actions/setup-deno
       - env:
           GH_TOKEN: ${{ github.token }}
-        run: ./scripts/github.ts protected-policy
+        run: ./scripts/github.ts archive-check

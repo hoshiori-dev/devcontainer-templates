@@ -7,7 +7,8 @@ additional authority.
 Agents may inspect, plan, implement an approved scope, run checks, create Issues, create branches,
 commit, push, and open or maintain draft PRs. They may mark a PR ready and request review when its
 implementation checks pass and its report names any expected archive gate. Follow the specification
-gate before implementation.
+contract before implementation. Approval labels and their automation are advisory; explicit human
+approval remains an agent operating requirement.
 
 A human maintainer alone approves a specification, confirms finished behavior, directs archive,
 merges a PR, authorizes a manual release, and changes this policy. An agent must not add its own
