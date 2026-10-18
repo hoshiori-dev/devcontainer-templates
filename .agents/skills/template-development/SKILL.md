@@ -12,7 +12,8 @@ Resolve all project paths from the repository root. This skill is repository-loc
 
 1. Read `.agents/knowledge/templates.md`, `.agents/knowledge/spec-workflow.md`, and the affected
    template's current metadata and spec. Every `src/` or `test/` PR includes a specification edit.
-   For changed behavior, publish the package for human approval. Wait for approval and the
+   Every edit, including typos, formatting, dependencies, and repairs, needs a proposal and spec
+   edit; add design when needed. Publish the package for human approval. Wait for approval and the
    maintainer-added `spec:approved` label before tasks or implementation.
 2. Keep published content under `src/<id>/` and assertions under `test/<id>/`. Check official
    image/Feature compatibility and native architectures. Select the per-template SemVer increment

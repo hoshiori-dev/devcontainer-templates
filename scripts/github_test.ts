@@ -56,16 +56,16 @@ Deno.test("approval rejects a PR pushed after the maintainer's label event", () 
   rejects(() => checkApprovalHead(undefined, approvedHead));
 });
 Deno.test("archive gate blocks active changes only when targeting main", () => {
-  checkArchive([proposal], "feature/ubuntu");
-  rejects(() => checkArchive([proposal], "main"));
-  checkArchive([], "main");
-  checkArchive(
+  assert(checkArchive([proposal], "feature/ubuntu"));
+  assert(!checkArchive([proposal], "main"));
+  assert(checkArchive([], "main"));
+  assert(checkArchive(
     [{ ...proposal, path: "openspec/changes/archive/2026-10-17-ubuntu/proposal.md" }, {
       path: "openspec/changes/archive/2026-10-17-ubuntu/tasks.md",
       content: "- [x] complete",
     }],
     "main",
-  );
+  ));
   assert(packagePath("openspec/specs/template/spec.md") === undefined);
 });
 Deno.test("release parses complete exact versions and explicit skipped entries", () => {
@@ -119,4 +119,21 @@ Deno.test("archive requires completed tasks independently of approval labels", (
       content: "- [x] one\n- [ ] two",
     }], "main")
   );
+});
+
+Deno.test("proposal-only approval changes with the proposal and survives task archive", async () => {
+  const original = await packageDigest([proposal]);
+  assert(original !== await packageDigest([{ ...proposal, content: "Different repair" }]));
+  const archived = [proposal, {
+    path: "openspec/changes/ubuntu/.openspec.yaml",
+    content: "schema: spec-driven\nskip_specs: true\n",
+  }, {
+    path: "openspec/changes/ubuntu/tasks.md",
+    content: "- [x] verified",
+  }].map((file) => ({
+    ...file,
+    path: file.path.replace("changes/ubuntu/", "changes/archive/2026-10-18-ubuntu/"),
+  }));
+  assert(original === await packageDigest(archived));
+  assert(checkArchive(archived, "main"));
 });

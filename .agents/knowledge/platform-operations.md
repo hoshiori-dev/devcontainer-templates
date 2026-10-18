@@ -51,7 +51,11 @@ from the existing ruleset and read it back. Keep it configured until then; appro
 not a required check. The approval label remains a contribution workflow requirement. The earlier
 bootstrap readback above records the old check names, not the desired final configuration.
 
-The archive workflow reads only trusted default-branch code and posts its check on the PR head.
+The archive workflow `.github/workflows/spec-archive.yml` runs `archive-verdict` using trusted
+default-branch code and posts results on the PR head. Normal waiting reports successful
+`awaiting-archive` while the required `spec-archived` stays pending; it occupies no runner. Keep
+`spec-archived` as the required check, not `archive-verdict` or `awaiting-archive`. After merge,
+verify waiting and archived results on a follow-up PR; privileged PR checks still execute main code.
 GitHub Actions check names alone cannot establish which workflow produced a result. The maintainer
 must inspect changes to workflows and approval code before merging; this repository does not claim
 organization-level required-workflow enforcement. Tokens used by an agent can represent a human

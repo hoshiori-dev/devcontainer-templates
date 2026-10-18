@@ -13,7 +13,7 @@ body:
     id: outcome
     attributes:
       label: Acceptance
-      description: Describe the observable result and validation. Link specifications when template behavior changes.
+      description: Describe the observable result and validation. Link the OpenSpec package for non-exempt work; follow the specification contract.
     validations:
       required: true
   - type: textarea

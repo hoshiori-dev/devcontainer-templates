@@ -13,19 +13,24 @@ Resolve all project paths from the repository root. This skill is repository-loc
 1. Read `.agents/knowledge/github-workflow.md` and `.agents/knowledge/authority.md`. Inspect status,
    current branch, remote, relevant Issue and PR, and prior maintainer instructions. Preserve
    unrelated work. Use the repository intake and PR forms.
-2. Create or link one coherent Issue and a short feature branch. For template behavior read
-   `.agents/knowledge/spec-workflow.md`, commit the approval package, and open the combined draft PR
-   before implementation. Reconcile discussion into the package and wait for human approval and the
-   maintainer-added `spec:approved` label before tasks or implementation. The label is required by
-   the workflow even though GitHub does not enforce it as a required merge check.
+2. Create or link one coherent Issue and a short feature branch. Read
+   `.agents/knowledge/spec-workflow.md` and classify by contract impact before implementation. Every
+   delivery-path edit needs proposal and spec; contract changes need deltas; other repairs and
+   behavior-preserving refactors need proposal with `skip_specs: true`. Only pure typos, formatting,
+   and routine dependency updates outside delivery paths are completely exempt. For non-exempt work,
+   commit the package and open the combined draft PR before implementation. Reconcile discussion
+   into the package and wait for human approval and the maintainer-added `spec:approved` label
+   before tasks or implementation. The label is required by the workflow even though GitHub does not
+   enforce it as a required merge check.
 3. Implement within approved scope, run the applicable just recipes, and inspect the diff for
    credentials and unrelated changes. Stage explicit files and use the repository commit-message
    convention. Push and update the draft PR body using a body file or structured API argument to
    preserve newlines.
 4. Reconcile tasks, checks, linked Issues, and human threads. Mark ready and request review when
-   implementation checks pass; report the archive gate when targeting `main`. Do not claim green CI
-   from local checks or label presence. Inspect checks on the current PR head; distinguish cancelled
-   superseded runs from failures of the current revision.
+   implementation checks pass; report successful `awaiting-archive` and pending `spec-archived` as
+   the expected archive gate when targeting `main`. Do not claim green CI from local checks or label
+   presence. Inspect checks on the current PR head; distinguish cancelled superseded runs from
+   failures of the current revision.
 5. On the maintainer's completion and archive instruction, use the official archive operation in the
    final PR into `main`, rerun checks, and report its revision. Leave merge to the maintainer. A
    later package change returns to approval; a later behavior change returns to completion review.

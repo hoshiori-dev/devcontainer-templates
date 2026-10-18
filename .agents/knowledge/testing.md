@@ -30,9 +30,12 @@ use global Docker prune as test cleanup.
 Static script tests cover malformed metadata, missing version changes, stale docs, selection
 behavior, specification companion changes, approval tampering, changed approval packages, and
 unarchived changes targeting `main`. Approval automation maintains labels; it is not a CI dependency
-or required check. Follow the specification contract for the required maintainer approval label. A
-workflow aggregation job succeeds only if every required upstream job succeeds; skipped, cancelled,
-and failed results cannot be interpreted as green.
+or required check. Successful `awaiting-archive` marks normal review waiting; the required
+`spec-archived` remains pending without occupying a runner. Missing or incomplete archived tasks and
+execution errors fail validation. The executor is `archive-verdict` in
+`.github/workflows/spec-archive.yml`. Follow the specification contract for the required maintainer
+approval label. A workflow aggregation job succeeds only if every required upstream job succeeds;
+skipped, cancelled, and failed results cannot be interpreted as green.
 
 PR CI, PR secret scans, and archive checks cancel superseded runs within their own per-PR groups.
 Archive checks do not rerun for draft/ready transitions: the archive requirement depends on the

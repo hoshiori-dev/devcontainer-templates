@@ -13,7 +13,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 jobs:
-  policy-dispatch:
+  archive-verdict:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
