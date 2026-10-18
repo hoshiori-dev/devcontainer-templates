@@ -5,10 +5,13 @@ own executable commands; workflows select their platforms and permissions. Tests
 scripts, not skill directories.
 
 Run `just check` before review; CI passes its exact PR base as `just check <base>`. Run
-`just test <id>` for each changed template on a Docker-capable Linux host. `just affected` uses the
-comparison base to select changed templates; shared test, script, shared Action, or workflow changes
-must test all templates. CI repeats real template tests on native Linux amd64 and arm64 runners. A
-local amd64 pass is evidence for amd64 only; report other execution as pending CI.
+`just pr-check <base>` to check that every `src/` or `test/` PR includes an added or modified
+OpenSpec `spec.md`. This uses the merge base with the actual target, including for stacked PRs; it
+checks file changes, while maintainers review specification coverage. Run `just test <id>` for each
+changed template on a Docker-capable Linux host. `just affected` uses the comparison base to select
+changed templates; shared test, script, shared Action, or workflow changes must test all templates.
+CI repeats real template tests on native Linux amd64 and arm64 runners. A local amd64 pass is
+evidence for amd64 only; report other execution as pending CI.
 
 Container tests publish a package to a temporary local OCI registry, apply the published reference
 by its verified manifest digest to an empty temporary project, start the resulting development
@@ -25,9 +28,11 @@ must run on success, failure, and cancellation, deleting only resources owned by
 use global Docker prune as test cleanup.
 
 Static script tests cover malformed metadata, missing version changes, stale docs, selection
-behavior, approval tampering, changed approval packages, and unarchived spec changes. A workflow
-aggregation job succeeds only if every required upstream job succeeds; skipped, cancelled, and
-failed results cannot be interpreted as green.
+behavior, specification companion changes, approval tampering, changed approval packages, and
+unarchived changes targeting `main`. Approval automation maintains labels; it is not a CI dependency
+or required check. Follow the specification contract for the required maintainer approval label. A
+workflow aggregation job succeeds only if every required upstream job succeeds; skipped, cancelled,
+and failed results cannot be interpreted as green.
 
 For unavailable Docker, architecture runners, GHCR permissions, or GitHub checks, record the exact
 missing verification. Package creation alone does not prove public anonymous consumption.

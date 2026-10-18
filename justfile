@@ -5,7 +5,7 @@ default:
     @just --list
 
 # All local checks CI runs without template containers.
-check base="origin/main": lint scripts-check (validate base) spec-check docs-check
+check base="origin/main": lint scripts-check (validate base) (pr-check base) spec-check docs-check
 
 lint:
     deno fmt --check
@@ -18,6 +18,9 @@ scripts-check:
 
 validate base="origin/main":
     ./scripts/template.ts validate --base "$1"
+
+pr-check base="origin/main":
+    ./scripts/pr.ts "$1"
 
 spec-check:
     OPENSPEC_NO_UPDATE_CHECK=1 OPENSPEC_TELEMETRY=0 openspec validate --all --strict --no-interactive

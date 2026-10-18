@@ -19,13 +19,15 @@ content and exclude secrets, generated test output, and unrelated user changes b
 Stage explicit paths.
 
 Open a draft PR early. Its description names the user-visible result, linked Issue and spec change
-where applicable, checks with evidence, and remaining limitations. Use the repository PR template.
-Keep the description current as scope settles. For spec work, ready means implementation is
-reviewable, while the archive check blocks merge until active changes are archived and tasks are
-complete. Human authorization to archive is checked during final review, not proven by that check.
+where applicable, checks with evidence, and remaining limitations. The PR template is a writing aid;
+title length and fixed body sections are not merge checks. Keep the description current as scope
+settles. For spec work, ready means implementation is reviewable, while the archive check blocks
+merge into `main` until active changes are archived and tasks are complete. Split PRs may target a
+short-lived feature branch and carry active changes. Human authorization to archive is checked
+during final review, not proven by that check.
 
 PR CI uses read-only credentials and tests contributor content without repository secrets.
-Privileged label and approval jobs execute only trusted default-branch code and read contributor
+Privileged archive and approval jobs execute only trusted default-branch code and read contributor
 files through the API. A workflow must never checkout PR-head content under `pull_request_target`
 with write credentials.
 

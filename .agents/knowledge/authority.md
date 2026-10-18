@@ -7,7 +7,9 @@ additional authority.
 Agents may inspect, plan, implement an approved scope, run checks, create Issues, create branches,
 commit, push, and open or maintain draft PRs. They may mark a PR ready and request review when its
 implementation checks pass and its report names any expected archive gate. Follow the specification
-gate before implementation.
+contract before implementation. For template behavior changes, agents wait for maintainer approval
+and the maintainer-added `spec:approved` label before tasks or implementation. GitHub does not
+enforce this label as a required merge check; the operating requirement still applies.
 
 A human maintainer alone approves a specification, confirms finished behavior, directs archive,
 merges a PR, authorizes a manual release, and changes this policy. An agent must not add its own
