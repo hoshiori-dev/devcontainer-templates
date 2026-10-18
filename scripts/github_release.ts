@@ -201,20 +201,20 @@ export async function sourceMatches(
     }`;
     assert(digest === remote.layers[0].digest, "Template layer digest mismatch");
     await Deno.writeFile(archive, new Uint8Array(bytes));
-    const entries = (await command(["tar", "-tzf", archive])).split("\n");
+    const entries = (await command(["tar", "-tf", archive])).split("\n");
     assert(
       entries.every((p) => !p.startsWith("/") && !p.split("/").includes("..")),
       "Unsafe template archive paths",
     );
     assert(
-      (await command(["tar", "-tvzf", archive])).split("\n").every((p) => /^[d-]/.test(p)),
+      (await command(["tar", "-tvf", archive])).split("\n").every((p) => /^[d-]/.test(p)),
       "Template archive contains links or devices",
     );
     const extracted = `${temp}/extracted`;
     await Deno.mkdir(extracted);
     await command([
       "tar",
-      "-xzf",
+      "-xf",
       archive,
       "--no-same-owner",
       "--no-same-permissions",
