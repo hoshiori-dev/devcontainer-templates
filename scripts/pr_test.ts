@@ -55,7 +55,8 @@ Deno.test("proposal, design, tasks, and non-spec files cannot replace a specific
 
 Deno.test("management, documentation, and dependency updates do not require specifications", () => {
   checkSpecification(parseChanges(
-    "M\0.github/workflows/ci.yml\0M\0deno.json\0M\0.agents/knowledge/testing.md\0M\0scripts/github.ts\0M\0README.md\0",
+    "M\0.github/workflows/ci.yml\0M\0deno.json\0M\0.agents/knowledge/testing.md\0" +
+      "M\0scripts/github.ts\0M\0README.md\0",
   ));
   checkSpecification([]);
 });

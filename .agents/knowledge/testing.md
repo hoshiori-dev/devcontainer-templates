@@ -29,9 +29,10 @@ use global Docker prune as test cleanup.
 
 Static script tests cover malformed metadata, missing version changes, stale docs, selection
 behavior, specification companion changes, approval tampering, changed approval packages, and
-unarchived changes targeting `main`. Approval automation is advisory and is not a CI dependency or
-required check. A workflow aggregation job succeeds only if every required upstream job succeeds;
-skipped, cancelled, and failed results cannot be interpreted as green.
+unarchived changes targeting `main`. Approval automation maintains labels; it is not a CI dependency
+or required check. Follow the specification contract for the required maintainer approval label. A
+workflow aggregation job succeeds only if every required upstream job succeeds; skipped, cancelled,
+and failed results cannot be interpreted as green.
 
 For unavailable Docker, architecture runners, GHCR permissions, or GitHub checks, record the exact
 missing verification. Package creation alone does not prove public anonymous consumption.

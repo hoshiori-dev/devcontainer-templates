@@ -302,7 +302,8 @@ export async function approval(): Promise<void> {
   await output("artifact", `spec-approval-${s.pr.number}-${digest}`);
   await output("approved", "true");
   console.log(
-    `Approved package ${digest} by ${sender.login}; immutable record will be uploaded by this workflow.`,
+    `Approved package ${digest} by ${sender.login}; ` +
+      "immutable record will be uploaded by this workflow.",
   );
 }
 export const labels = [

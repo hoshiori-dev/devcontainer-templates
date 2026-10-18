@@ -44,7 +44,8 @@ unless the user requests another language. The root README also has a Chinese tr
 - A maintainer approves specifications and merges. Agents never approve their own specifications,
   merge, manually release, or expand their own permissions.
 - Every `src/` or `test/` PR includes a specification edit. Template behavior changes require human
-  specification approval before tasks and implementation; approval labels assist review. Read the
+  specification approval and the maintainer-added `spec:approved` label before tasks and
+  implementation. The label is a workflow requirement, not a required merge check. Read the
   specification contract even when an operation skill offers to generate all artifacts at once.
 - Finished spec changes remain active for review. Archive in the final PR into `main` only after the
   maintainer explicitly confirms completion and directs archiving.

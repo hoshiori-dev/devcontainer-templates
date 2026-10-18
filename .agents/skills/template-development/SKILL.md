@@ -1,6 +1,9 @@
 ---
 name: template-development
-description: Develops and verifies this repository's Dev Container Templates. Use when adding a template, changing template options or container behavior, updating published files, or investigating a template apply or container test failure.
+description: >-
+  Develops and verifies this repository's Dev Container Templates. Use when adding a template,
+  changing template options or container behavior, updating published files, or investigating a
+  template apply or container test failure.
 ---
 
 # Template development
@@ -8,9 +11,9 @@ description: Develops and verifies this repository's Dev Container Templates. Us
 Resolve all project paths from the repository root. This skill is repository-local.
 
 1. Read `.agents/knowledge/templates.md`, `.agents/knowledge/spec-workflow.md`, and the affected
-   template's current metadata and spec. Every `src/` or `test/` PR includes a specification edit. For
-   changed behavior, publish the package for human approval
-   before tasks or implementation. Apply only after approval.
+   template's current metadata and spec. Every `src/` or `test/` PR includes a specification edit.
+   For changed behavior, publish the package for human approval. Wait for approval and the
+   maintainer-added `spec:approved` label before tasks or implementation.
 2. Keep published content under `src/<id>/` and assertions under `test/<id>/`. Check official
    image/Feature compatibility and native architectures. Select the per-template SemVer increment
    before editing published files.
@@ -21,8 +24,8 @@ Resolve all project paths from the repository root. This skill is repository-loc
    `just package`, and `just test <id>`. Read `.agents/knowledge/testing.md` for unavailable Docker
    or native architecture coverage; record missing checks accurately.
 5. Update tasks and the PR's results and limitations. Keep an active change for review; sync and
-   archive in the final PR into `main` only after the maintainer's explicit completion and archive instruction. Rerun checks and
-   report the revision for final review.
+   archive in the final PR into `main` only after the maintainer's explicit completion and archive
+   instruction. Rerun checks and report the revision for final review.
 
 Done when: the approved behavior has assertions, generated docs match their inputs, required checks
 have evidence, and the PR accurately states its review gate.

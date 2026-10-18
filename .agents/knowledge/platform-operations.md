@@ -48,8 +48,8 @@ it as an unresolved finding. Organization settings remain outside scope.
 
 After this simplification is merged and the replacement checks have run, remove `protected-policy`
 from the existing ruleset and read it back. Keep it configured until then; approval automation is
-advisory and must not become a required check. The earlier bootstrap readback above records the old
-check names, not the desired final configuration.
+not a required check. The approval label remains a contribution workflow requirement. The earlier
+bootstrap readback above records the old check names, not the desired final configuration.
 
 The archive workflow reads only trusted default-branch code and posts its check on the PR head.
 GitHub Actions check names alone cannot establish which workflow produced a result. The maintainer

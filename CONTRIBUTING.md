@@ -23,12 +23,15 @@ specs without edits, proposal/design/tasks files alone, and deleted specs do not
 Maintainers review whether the specification covers the implementation.
 
 Template behavior changes start with OpenSpec in a draft PR. First submit the proposal,
-specification delta, and design where needed. A human maintainer approves that package in
-discussion; the optional `spec:approved` label tracks approval against its content. Missing labels
-or approval automation failures do not block merging. Create tasks and implement after approval.
-Small management, harness, knowledge typo, and dependency updates outside `src/` and `test/` can use
-PR discussion and validation without a spec when they fit existing contracts. Discuss substantive
-contract changes first.
+specification delta, and design where needed. A human maintainer approves that package in discussion
+and must add `spec:approved` to mark the package approved. Create tasks and implement only after
+that approval and label. The label is required by the contribution workflow; GitHub does not enforce
+it as a required merge check.
+
+Only PRs with no changes under `src/` or `test/` may omit specification changes. Small management,
+harness, knowledge typo, and dependency updates outside these directories can use PR discussion and
+validation without a spec when they fit existing contracts. Discuss substantive contract changes
+first.
 
 Keep the active change available while the implementation is reviewed. After the maintainer confirms
 completion and explicitly directs archiving, sync and archive in the final PR into `main` and rerun
