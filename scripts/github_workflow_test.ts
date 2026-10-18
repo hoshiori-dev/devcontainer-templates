@@ -29,6 +29,8 @@ Deno.test("approval label lifecycle is independent of the archive merge check", 
   let deleted = 0;
   let postedCheck: { name: string; conclusion: string } | undefined;
   let approvalRequests = 0;
+  let workflowChanged = false;
+  let workflowMissing = false;
   globalThis.fetch = (input, init) => {
     const url = new URL(String(input));
     const path = url.pathname.replace("/repos/fixture/templates", "");
@@ -62,11 +64,19 @@ Deno.test("approval label lifecycle is independent of the archive merge check", 
         event: "pull_request_target",
         conclusion: "success",
         actor: { login: "maintainer" },
-        head_sha: "base",
+        head_sha: "approval-pr-head",
         repository: { id: 24 },
       };
-    } else if (path === "/compare/base...main") result = { status: "identical" };
-    else if (path === "/issues/1/labels/spec%3Aapproved" && init?.method === "DELETE") {
+    } else if (path === "/contents/.github/workflows/spec-approval.yml") {
+      if (url.searchParams.get("ref") !== "main" && workflowMissing) {
+        return Promise.resolve(new Response(null, { status: 404 }));
+      }
+      result = {
+        sha: url.searchParams.get("ref") === "main" || !workflowChanged
+          ? "trusted-workflow"
+          : "changed-workflow",
+      };
+    } else if (path === "/issues/1/labels/spec%3Aapproved" && init?.method === "DELETE") {
       deleted++;
       result = [];
     } else if (path === "/check-runs" && init?.method === "POST") {
@@ -108,12 +118,24 @@ Deno.test("approval label lifecycle is independent of the archive merge check", 
     pr.head.sha = "implementation-head"; // The approval package is unchanged.
     await approval();
     if (deleted !== 0) throw new Error("Implementation-only update removed approval");
+    pr.base.ref = "feature/ubuntu";
+    await approval();
+    if (deleted !== 0) throw new Error("Split PR lost an unchanged approval package");
+    workflowChanged = true;
+    await approval();
+    if (Number(deleted) !== 1) throw new Error("Untrusted workflow definition retained approval");
+    workflowChanged = false;
+    workflowMissing = true;
+    await approval();
+    if (Number(deleted) !== 2) throw new Error("Missing workflow definition retained approval");
+    workflowMissing = false;
     files[1].content = "Changed specification";
     await approval();
-    if (Number(deleted) !== 1) throw new Error("Changed package did not remove approval");
+    if (Number(deleted) !== 3) throw new Error("Changed package did not remove approval");
 
     const beforeArchive = approvalRequests;
     pr.labels = [];
+    pr.base.ref = "main";
     if (await archivePassed()) throw new Error("Active change passed main archive gate");
     pr.base.ref = "feature/ubuntu";
     if (!await archivePassed()) throw new Error("Active change blocked split PR");

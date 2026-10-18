@@ -37,13 +37,14 @@ into feature branches; the final PR into `main` carries the complete change and 
    Trusted automation records the actor, PR commit, and approval-package fingerprint. Proposal,
    design, or delta changes invalidate approval; implementation-only commits preserve it. Approval
    evidence is a 90-day Actions artifact from a successful trusted approval workflow run; expiration
-   requires a maintainer to reapply the label. Archive path normalization and task changes preserve
-   the package identity. A label alone, contributor-supplied comment, or approval by the
-   implementing agent is not proof of a tracked approval. Before recording a new approval,
-   automation requires the current PR head to match the label event's head. If a push races that
-   event, review the current commit and reapply the label. The label and its record assist review:
-   missing, expired, or failed approval automation never blocks merging. Maintainers own the
-   approval decision; agents still wait for explicit approval.
+   requires a maintainer to reapply the label. Records also require the run's workflow definition to
+   match the current default branch; workflow changes can require reapplying the label. Archive path
+   normalization and task changes preserve the package identity. A label alone, contributor-supplied
+   comment, or approval by the implementing agent is not proof of a tracked approval. Before
+   recording a new approval, automation requires the current PR head to match the label event's
+   head. If a push races that event, review the current commit and reapply the label. The label and
+   its record assist review: missing, expired, or failed approval automation never blocks merging.
+   Maintainers own the approval decision; agents still wait for explicit approval.
 3. Only after approval, create tasks and implement. Official generated skills may offer all
    artifacts at once; stop before tasks to honor this project gate.
 4. Verify implementation, reconcile tasks and PR discussion, and mark ready for human review while

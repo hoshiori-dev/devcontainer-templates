@@ -222,6 +222,11 @@ async function validApproval(number: number, digest: string): Promise<boolean> {
     { artifacts: { name: string; expired: boolean; workflow_run?: { id: number } }[] }
   >(`/actions/artifacts?name=${name}&per_page=100`);
   const repository = await api<{ id: number; default_branch: string }>("");
+  const trustedWorkflow = await api<{ sha: string }>(
+    `/contents/.github/workflows/spec-approval.yml?ref=${
+      encodeURIComponent(repository.default_branch)
+    }`,
+  );
   for (const artifact of artifacts.artifacts) {
     if (artifact.name !== name || artifact.expired || !artifact.workflow_run) continue;
     const run = await api<
@@ -237,11 +242,13 @@ async function validApproval(number: number, digest: string): Promise<boolean> {
     >(`/actions/runs/${artifact.workflow_run.id}`);
     if (!trustedApprovalRun(run, workflow.id, repository.id)) continue;
     if (!await human(run.actor.login)) continue;
-    // A trusted approval run must have run on a commit reachable from the default branch.
-    const comparison = await api<{ status: string }>(
-      `/compare/${run.head_sha}...${encodeURIComponent(repository.default_branch)}`,
+    // REST run.head_sha can identify the PR head, not the checked-out default branch.
+    // Only accept the same workflow definition as the trusted default branch.
+    const sourceWorkflow = await api<{ sha: string }>(
+      `/contents/.github/workflows/spec-approval.yml?ref=${run.head_sha}`,
+      { allow404: true },
     );
-    if (["ahead", "identical"].includes(comparison.status)) return true;
+    if (sourceWorkflow?.sha === trustedWorkflow.sha) return true;
   }
   return false;
 }
