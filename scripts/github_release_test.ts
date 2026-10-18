@@ -1,8 +1,16 @@
 #!/usr/bin/env -S deno test --allow-read --allow-write --allow-run=tar
 import { sourceMatches } from "./github_release.ts";
 
-for (const mode of [0o644, 0o755]) {
-  Deno.test(`published archives match source content and executable flag (${mode.toString(8)})`, async () => {
+for (
+  const [compressed, mode] of [
+    [false, 0o644],
+    [false, 0o755],
+    [true, 0o644],
+    [true, 0o755],
+  ] as const
+) {
+  const format = compressed ? "gzip" : "tar";
+  Deno.test(`verify ${format} source and executable flag (${mode.toString(8)})`, async () => {
     const original = Deno.cwd();
     const temp = await Deno.makeTempDir({ prefix: "release-verification-test-" });
     const item = { id: "ubuntu", version: "1.0.0", name: "Ubuntu", description: "Test" };
@@ -14,9 +22,9 @@ for (const mode of [0o644, 0o755]) {
       );
       await Deno.writeTextFile(`${temp}/src/ubuntu/payload.txt`, "reviewed content\n");
       await Deno.chmod(`${temp}/src/ubuntu/payload.txt`, mode);
-      const archive = `${temp}/template.tgz`;
+      const archive = `${temp}/template.${compressed ? "tgz" : "tar"}`;
       const packed = await new Deno.Command("tar", {
-        args: ["-czf", archive, "-C", `${temp}/src/ubuntu`, "."],
+        args: [compressed ? "-czf" : "-cf", archive, "-C", `${temp}/src/ubuntu`, "."],
       }).output();
       if (!packed.success) throw new Error("Cannot create test archive");
       const bytes = await Deno.readFile(archive);
