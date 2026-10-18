@@ -24,7 +24,8 @@ Resolve all project paths from the repository root. This skill is repository-loc
    preserve newlines.
 4. Reconcile tasks, checks, linked Issues, and human threads. Mark ready and request review when
    implementation checks pass; report the archive gate when targeting `main`. Do not claim green CI
-   from local checks or label presence.
+   from local checks or label presence. Inspect checks on the current PR head; distinguish cancelled
+   superseded runs from failures of the current revision.
 5. On the maintainer's completion and archive instruction, use the official archive operation in the
    final PR into `main`, rerun checks, and report its revision. Leave merge to the maintainer. A
    later package change returns to approval; a later behavior change returns to completion review.

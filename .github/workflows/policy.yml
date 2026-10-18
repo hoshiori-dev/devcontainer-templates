@@ -6,14 +6,12 @@ on:
       synchronize,
       reopened,
       edited,
-      ready_for_review,
-      converted_to_draft,
     ]
 permissions:
   contents: read
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   policy-dispatch:
     runs-on: ubuntu-24.04

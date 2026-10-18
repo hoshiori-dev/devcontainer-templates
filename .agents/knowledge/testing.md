@@ -34,6 +34,11 @@ or required check. Follow the specification contract for the required maintainer
 workflow aggregation job succeeds only if every required upstream job succeeds; skipped, cancelled,
 and failed results cannot be interpreted as green.
 
+PR CI, PR secret scans, and archive checks cancel superseded runs within their own per-PR groups.
+Archive checks do not rerun for draft/ready transitions: the archive requirement depends on the
+target branch and change files. Approval record workflows let an in-progress run finish before the
+next run starts. Keep the CI gate's failure and cancellation handling when reducing runner use.
+
 For unavailable Docker, architecture runners, GHCR permissions, or GitHub checks, record the exact
 missing verification. Package creation alone does not prove public anonymous consumption.
 Publication verification is in the platform operations guide.
