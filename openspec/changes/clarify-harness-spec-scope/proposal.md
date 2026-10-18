@@ -24,13 +24,17 @@ contract changes, implementation-only changes, and the few changes that need no 
 - Cover PR #8's per-PR archive cancellation and removal of draft-state triggers with a
   specification. Retain CI gate failure handling, edited events, trusted execution, and
   approval-record sequencing.
+- Treat an unarchived change as a normal waiting state: report successful `awaiting-archive` while
+  withholding the required `spec-archived` success. Actual execution errors remain failures.
+  Preserve feature-branch exceptions and completed-task requirements.
 
 ## Capabilities
 
 ### New Capabilities
 
 - `change-governance`: classification, planning artifacts, human approval, and archive lifecycle.
-- `pr-validation`: archive-check cancellation and event selection for pull requests.
+- `pr-validation`: archive-check waiting states, cancellation, and event selection for pull
+  requests.
 
 ### Modified Capabilities
 

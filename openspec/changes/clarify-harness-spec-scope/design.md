@@ -68,6 +68,20 @@ failure/cancellation aggregation, edited-event handling, trusted execution, and 
 workflow sequencing. Review the existing implementation against the approved scenarios before
 returning the PR to ready.
 
+### Separate archive waiting from execution failure
+
+Follow the reference repository's observable archive behavior: an active change into `main` produces
+successful `awaiting-archive`, while the required `spec-archived` check remains unsatisfied. This
+keeps normal human review out of CI failure reporting without allowing merge. Once archive and task
+conditions pass, report `spec-archived` success. Checker loading, input retrieval, and execution
+errors remain actual failures; do not swallow them as waiting.
+
+Preserve this repository's feature-target exception and completed-task requirements, along with the
+existing trusted execution boundary. The change concerns archive result reporting; it does not
+require copying the reference repository's entire workflow architecture or dropping existing rules.
+Verify waiting, archived success, feature targets, and execution errors after approval. Update the
+knowledge and PR guidance so agents distinguish this expected waiting gate from engineering errors.
+
 ## Risks / Trade-offs
 
 - Manual classification can drift: keep one decision table and verify it with independent readers

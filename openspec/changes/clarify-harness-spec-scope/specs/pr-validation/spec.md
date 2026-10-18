@@ -39,6 +39,34 @@ target branch and change files, including in draft PRs, rather than draft status
 - **THEN** archive validation evaluates the actual target
 - **AND** active changes block entry into `main` but may remain in a feature-target PR
 
+### Requirement: Archive waiting state
+
+An unarchived change targeting `main` MUST produce a successful `awaiting-archive` job instead of an
+archive failure. The required `spec-archived` check MUST remain unsatisfied until archive and
+completed-task conditions pass. Archive verdicts MUST distinguish waiting from execution errors;
+errors MUST fail validation rather than report waiting or success.
+
+#### Scenario: Normal review before archive
+
+- **WHEN** a PR into `main` contains an active change and archive validation executes successfully
+- **THEN** the run reports `awaiting-archive` successfully without satisfying `spec-archived`
+- **AND** GitHub still blocks merging until the required archive check is satisfied
+
+#### Scenario: Archive requirements satisfied
+
+- **WHEN** all changes covered by the archive gate are archived with completed tasks
+- **THEN** validation reports a successful `spec-archived` check
+
+#### Scenario: Split pull request
+
+- **WHEN** a PR targets a feature branch and carries an active change
+- **THEN** archive validation reports `spec-archived` successfully under the split-PR rule
+
+#### Scenario: Archive checker failure
+
+- **WHEN** loading the checker, reading its inputs, or executing it fails
+- **THEN** validation fails instead of reporting `awaiting-archive` or archive success
+
 ### Requirement: Preserved validation boundaries
 
 CI aggregation MUST continue rejecting failed, cancelled, or unexpectedly skipped required upstream
