@@ -37,8 +37,8 @@ export async function packageDigest(files: FileContent[]): Promise<string> {
   )
     .map((b) => b.toString(16).padStart(2, "0")).join("");
 }
-export function checkArchive(files: FileContent[], target: string): void {
-  if (target !== "main") return;
+export function checkArchive(files: FileContent[], target: string): boolean {
+  if (target !== "main") return true;
   const archived = new Set(
     files.map((f) => packagePath(f.path)).filter((p) => p?.archived).map((p) => p!.name),
   );
@@ -52,10 +52,7 @@ export function checkArchive(files: FileContent[], target: string): void {
     );
   }
   const active = files.filter((f) => packagePath(f.path) && !packagePath(f.path)!.archived);
-  assert(
-    !active.length,
-    "Specification is active. Wait for human confirmation and archive before merging into main.",
-  );
+  return active.length === 0;
 }
 
 export function approvalActor(
@@ -140,13 +137,14 @@ async function event(): Promise<Json> {
   const payload = JSON.parse(await Deno.readTextFile(path));
   return payload;
 }
-async function snapshot(): Promise<
-  { pr: PullRequest; files: FileContent[] }
-> {
+async function snapshot(
+  onHead?: (pr: PullRequest) => Promise<void>,
+): Promise<{ pr: PullRequest; files: FileContent[] }> {
   const payload = await event();
   const number = (payload.pull_request as PullRequest | undefined)?.number || payload.number;
   assert(typeof number === "number", "Pull request event required");
   const pr = await api<PullRequest>(`/pulls/${number}`);
+  await onHead?.(pr);
   const changed = await pages<{ filename: string; previous_filename?: string }>(
     `/pulls/${number}/files`,
   );
@@ -361,31 +359,49 @@ async function syncLabels(apply: boolean): Promise<void> {
   }
 }
 export async function archiveCheck(): Promise<void> {
-  const { pr, files } = await snapshot();
-  let summary = pr.base.ref === "main"
-    ? "Specification changes are archived and tasks are complete."
-    : "Split PR: archive is required only when merging into main.";
-  let conclusion = "success";
-  try {
-    checkArchive(files, pr.base.ref);
-  } catch (error) {
-    summary = String(error);
-    conclusion = "failure";
+  const payload = await event();
+  let head = (payload.pull_request as PullRequest).head.sha;
+  const details_url = `https://github.com/${repo()}/actions/runs/${Deno.env.get("GITHUB_RUN_ID")}`;
+  async function report(name: string, summary: string, conclusion?: string): Promise<void> {
+    await api("/check-runs", {
+      method: "POST",
+      body: {
+        name,
+        head_sha: head,
+        status: conclusion ? "completed" : "in_progress",
+        ...(conclusion ? { conclusion } : {}),
+        details_url,
+        output: { title: name, summary },
+      },
+    });
   }
-  await api("/check-runs", {
-    method: "POST",
-    body: {
-      name: "spec-archived",
-      head_sha: pr.head.sha,
-      status: "completed",
-      conclusion,
-      details_url: `https://github.com/${repo()}/actions/runs/${Deno.env.get("GITHUB_RUN_ID")}`,
-      output: { title: "spec-archived", summary },
-    },
-  });
-  console.log(`spec-archived: ${conclusion}: ${summary}`);
-  assert(conclusion === "success", summary);
+  // Reset a previous success before any API read: a retarget can reuse this commit.
+  await report("spec-archived", "Evaluating archive requirements.");
+  try {
+    const { pr, files } = await snapshot(async (current) => {
+      if (current.head.sha !== head) {
+        head = current.head.sha;
+        await report("spec-archived", "Evaluating archive requirements.");
+      }
+    });
+    if (!checkArchive(files, pr.base.ref)) {
+      const summary = "Waiting for explicit human archive instructions and the committed archive.";
+      // The required API check remains pending without occupying a runner.
+      await report("awaiting-archive", summary, "success");
+      console.log(`awaiting-archive: ${summary}`);
+      return;
+    }
+    const summary = pr.base.ref === "main"
+      ? "Specification changes are archived and tasks are complete."
+      : "Split PR: archive is required only when merging into main.";
+    await report("spec-archived", summary, "success");
+    console.log(`spec-archived: success: ${summary}`);
+  } catch (error) {
+    await report("spec-archived", String(error), "failure");
+    throw error;
+  }
 }
+
 async function platformCheck(): Promise<void> {
   for (
     const path of [

@@ -3,7 +3,7 @@
 Read when changing harness files, commands, tool versions, or workflows, or when performing the
 periodic consistency review. The changing source's PR author owns updating its dependents in the
 same PR. Scripts and workflows own executable facts; knowledge files own operating conventions;
-OpenSpec owns template behavior.
+OpenSpec owns delivery and harness behavior contracts.
 
 Management code serves developers. Rely on the configured workspace, installed Features, and tool
 errors instead of adding directory recovery, fallback paths, or duplicate checks for controlled

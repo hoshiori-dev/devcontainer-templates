@@ -12,16 +12,18 @@ List commands, results, and any checks that could not run.
 
 ## Specification
 
-For every PR changing `src/` or `test/`, link the OpenSpec `spec.md` added or modified in this PR.
-This includes template documentation, metadata, and tests; small changes in these directories are
-not exempt.
+Link the OpenSpec change and its planning package. Every `src/` or `test/` edit requires a proposal
+and an added or modified `spec.md`, including typos, formatting, dependencies, and test repairs.
+Delivery or harness contract changes also require proposal and spec deltas; add design when needed.
 
-Only PRs with no changes under `src/` or `test/` may omit specification changes. For a small
-management, harness, documentation, or dependency update, explain why it fits existing contracts.
+Outside `src/` and `test/`, fixes restoring existing contracts and behavior-preserving refactors
+require a proposal and optional design with `skip_specs: true`. Only pure typo corrections,
+formatting, and routine dependency-reference updates outside these directories may omit OpenSpec
+files entirely; explain that exemption here. Mixed changes follow the strongest applicable path.
 
-For template behavior changes, obtain maintainer approval and the `spec:approved` label before
-creating tasks or implementing. The maintainer must add this label to mark the package approved;
-GitHub does not enforce its presence as a required merge check. Keep the PR draft until the approved
-package is implemented. After validation, request human acceptance and archive only when explicitly
-instructed. Split PRs may carry active changes into feature branches; the final PR into `main` must
-archive them.
+For all non-exempt changes, obtain maintainer approval and the maintainer-added `spec:approved`
+label before tasks or implementation. The label is required by the workflow, although it is not a
+required merge check. Keep the PR draft until the approved package is implemented. After validation,
+request human acceptance; archive only when explicitly instructed. Split PRs may carry active
+changes into feature branches; the final PR into `main` must archive them. Successful
+`awaiting-archive` indicates this normal waiting stage, while `spec-archived` remains pending.

@@ -30,7 +30,7 @@ unless the user requests another language. The root README also has a Chinese tr
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Adding or changing a published template                                              | [.agents/skills/template-development/SKILL.md](.agents/skills/template-development/SKILL.md) and [.agents/knowledge/templates.md](.agents/knowledge/templates.md)                   |
 | Running, changing, or debugging validation                                           | [.agents/knowledge/testing.md](.agents/knowledge/testing.md)                                                                                                                        |
-| Changing template behavior, writing a spec, or archiving                             | [.agents/knowledge/spec-workflow.md](.agents/knowledge/spec-workflow.md), then the relevant official OpenSpec skill in `.agents/skills/openspec-*/`                                 |
+| Classifying work, changing contracts, fixing, refactoring, or archiving              | [.agents/knowledge/spec-workflow.md](.agents/knowledge/spec-workflow.md), then the relevant official OpenSpec skill in `.agents/skills/openspec-*/`                                 |
 | Creating an Issue, branch, commit, PR, or release record                             | [.agents/skills/github-project-workflow/SKILL.md](.agents/skills/github-project-workflow/SKILL.md) and [.agents/knowledge/github-workflow.md](.agents/knowledge/github-workflow.md) |
 | Pushing, marking ready, requesting review, changing settings, or discussing autonomy | [.agents/knowledge/authority.md](.agents/knowledge/authority.md)                                                                                                                    |
 | Configuring repository settings or verifying publication                             | [.agents/knowledge/platform-operations.md](.agents/knowledge/platform-operations.md)                                                                                                |
@@ -43,14 +43,17 @@ unless the user requests another language. The root README also has a Chinese tr
   ready for human review under the authority contract.
 - A maintainer approves specifications and merges. Agents never approve their own specifications,
   merge, manually release, or expand their own permissions.
-- Every `src/` or `test/` PR includes a specification edit. Template behavior changes require human
-  specification approval and the maintainer-added `spec:approved` label before tasks and
-  implementation. The label is a workflow requirement, not a required merge check. Read the
-  specification contract even when an operation skill offers to generate all artifacts at once.
+- Read the specification contract before implementation. Every `src/` or `test/` PR needs a full
+  proposal and spec edit; delivery and harness contract changes need spec deltas too. Other repairs
+  and behavior-preserving refactors need a proposal, with `skip_specs: true`. Only pure typos,
+  formatting, and routine dependency updates outside delivery paths are completely exempt.
+- All non-exempt packages require human approval and the maintainer-added `spec:approved` label
+  before tasks or implementation. Labels assist review; they are not required merge checks.
 - Finished spec changes remain active for review. Archive in the final PR into `main` only after the
   maintainer explicitly confirms completion and directs archiving.
 - The archive merge check blocks PRs into `main` during that review; feature-branch PRs may carry
-  active changes. Report this expected gate separately from implementation failures.
+  active changes. Successful `awaiting-archive` leaves the required check pending; report this
+  expected gate separately from implementation failures.
 - Stop dependent work and ask the maintainer when acceptance is unclear, scope expands, required
   checks cannot run, or an authority boundary is reached.
 - Keep credentials and personal data out of commits, logs, examples, and reports. Use secret storage

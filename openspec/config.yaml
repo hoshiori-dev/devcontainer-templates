@@ -4,14 +4,16 @@ context: |
   This repository publishes Dev Container Templates through GHCR.
   Write artifacts in English using the template's structural headings.
   Read .agents/knowledge/spec-workflow.md before preparing, applying, syncing,
-  or archiving a change. Specifications own template behavior; Issues own status.
-  Every src/ or test/ PR includes an added or modified spec.md, with no small-change
-  exemption. Only PRs touching neither directory may omit specification changes.
-  Small management, harness, knowledge, and dependency updates may use PR discussion
-  without specs when consistent with existing contracts. Maintainers must add
-  spec:approved to approve a specification package. Agents wait for approval and
-  that label before tasks or implementation; GitHub does not enforce the label
-  as a required merge check. Humans authorize archive in the final PR into main.
+  or archiving a change. Specifications own delivery and harness contracts; Issues own status.
+  Every src/ or test/ edit requires proposal and spec changes, including typos, formatting,
+  dependencies, and repairs. Delivery or harness contract changes require proposal and spec deltas.
+  Repairs restoring existing contracts and behavior-preserving refactors outside those directories
+  require proposal and optional design with skip_specs: true, without spec deltas. Only pure typos,
+  formatting, and routine dependency-reference updates outside src/ and test/ are fully exempt.
+  Mixed changes follow the strongest applicable path. For every non-exempt package, maintainers
+  approve and add spec:approved before agents create tasks or implement; the label is required by
+  the workflow but not a required merge check. Tasks are post-approval execution records. Humans
+  authorize archive in the final PR into main; proposal-only archive invents no stable requirements.
 
 rules:
   proposal:
@@ -19,8 +21,8 @@ rules:
   design:
     - Record approach and trust boundaries without an implementation task list.
   tasks:
-    - Create tasks only after the maintainer has approved the proposal, design,
-      and delta specs and added spec:approved under the repository contract.
+    - Create tasks only after the maintainer approves the applicable planning package
+      and adds spec:approved under the repository contract.
 operations:
   apply:
     guidance:

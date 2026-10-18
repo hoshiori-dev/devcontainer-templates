@@ -1,8 +1,8 @@
 # Specification workflow
 
-Read before changing template behavior, generating OpenSpec artifacts, reviewing approval, syncing
-specs, or archiving. This file owns approval and lifecycle; OpenSpec owns artifact format and
-behavior requirements.
+Read before classifying changes, changing delivery or harness contracts, repairing or refactoring
+implementation, generating OpenSpec artifacts, reviewing approval, syncing specs, or archiving. This
+file owns approval and lifecycle; OpenSpec owns artifact format and behavior requirements.
 
 ## Sources and scope
 
@@ -19,12 +19,28 @@ tasks, deletions, and unchanged spec renames do not. Maintainers judge whether t
 covers the change; automation does not compare requirement meaning or require an archived delta for
 stable spec edits.
 
-For new or changed template behavior, prepare a proposal and delta spec before implementation. Only
-PRs with no changes under `src/` or `test/` may omit specification changes. Small management,
-harness, knowledge typo, and dependency updates outside these directories can use PR discussion and
-validation without a spec when they remain consistent with existing contracts. Discuss substantial
-changes to those contracts with the maintainer first. Bot PRs follow the same path-based rule as
-other PRs.
+Classify by contract impact before implementation, regardless of patch size or bot authorship:
+
+- Any `src/` or `test/` edit, including typos, formatting, dependencies, and repairs: proposal and
+  spec edit, with design when needed. This directory rule overrides every category below.
+- Delivery or harness contract changes, including workflow triggers, cancellation, permissions,
+  approval, checks, publication, commands, and agent rules: proposal and spec delta; design when
+  needed.
+- Fixes restoring existing contracts or behavior-preserving refactors outside delivery paths:
+  proposal and optional design, with `skip_specs: true` in `.openspec.yaml` and no spec deltas. Cite
+  the unchanged contract and how it will be verified.
+- Pure typo corrections, formatting, or routine dependency-reference updates outside delivery paths:
+  no OpenSpec files required; explain the exemption in the PR.
+
+Only the final category is completely exempt. Mixed changes follow the strongest applicable
+category; a routine dependency update does not exempt accompanying code or policy changes. Small
+management or harness work is not a separate exemption. Maintainers judge classification and
+coverage; CI only enforces the existing delivery-path companion check, not semantic classification
+elsewhere.
+
+All non-exempt changes follow the approval and archive lifecycle below. Proposal-only changes keep
+post-approval tasks and archive records without inventing stable requirements. A missing optional
+design is not a reason to generate artificial design work.
 
 Large work may use stacked PRs targeting a short-lived feature branch. Each PR changing `src/` or
 `test/` still includes a specification edit relative to its own target. Active changes may merge
@@ -32,7 +48,7 @@ into feature branches; the final PR into `main` carries the complete change and 
 
 ## Approval gates
 
-1. Open a draft PR containing proposal, delta specifications, and design when the approach changes
+1. Open a draft PR containing the package selected above. Include design when the approach changes
    structure, interfaces, dependencies, or has meaningful options. Discuss outstanding questions and
    reconcile the committed package.
 2. A human maintainer approves in the discussion and must add `spec:approved` to mark the package
@@ -53,7 +69,9 @@ into feature branches; the final PR into `main` carries the complete change and 
    artifacts at once; stop before tasks to honor this project gate.
 4. Verify implementation, reconcile tasks and PR discussion, and mark ready for human review while
    the change remains active. The archive gate blocks merging into `main` while active change files
-   remain, including in drafts.
+   remain, including in drafts. Successful `awaiting-archive` means normal review is waiting; the
+   required `spec-archived` check stays pending without occupying a runner. Execution errors fail
+   the workflow. This is separate from implementation failures.
 5. After the maintainer explicitly confirms completion and directs archive, the branch holder syncs
    and archives in the final PR into `main`, reruns checks, and reports the resulting revision.
    Automation never performs archive. New behavior or package changes return to the relevant gate;

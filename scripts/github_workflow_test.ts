@@ -27,7 +27,10 @@ Deno.test("approval label lifecycle is independent of the archive merge check", 
   ];
   let recordedArtifact = "";
   let deleted = 0;
-  let postedCheck: { name: string; conclusion: string } | undefined;
+  const postedChecks: { name: string; status: string; conclusion?: string; head_sha: string }[] =
+    [];
+  let failTree = false;
+  let failPullRequest = false;
   let approvalRequests = 0;
   let workflowChanged = false;
   let workflowMissing = false;
@@ -35,9 +38,12 @@ Deno.test("approval label lifecycle is independent of the archive merge check", 
     const url = new URL(String(input));
     const path = url.pathname.replace("/repos/fixture/templates", "");
     let result: unknown;
-    if (path === "/pulls/1") result = pr;
-    else if (path === "/pulls/1/files") result = files.map((file) => ({ filename: file.path }));
+    if (path === "/pulls/1") {
+      if (failPullRequest) return Promise.resolve(new Response(null, { status: 503 }));
+      result = pr;
+    } else if (path === "/pulls/1/files") result = files.map((file) => ({ filename: file.path }));
     else if (path === `/git/trees/${pr.head.sha}`) {
+      if (failTree) return Promise.resolve(new Response(null, { status: 503 }));
       result = {
         truncated: false,
         tree: files.map((file, index) => ({ path: file.path, sha: String(index), type: "blob" })),
@@ -80,7 +86,7 @@ Deno.test("approval label lifecycle is independent of the archive merge check", 
       deleted++;
       result = [];
     } else if (path === "/check-runs" && init?.method === "POST") {
-      postedCheck = JSON.parse(String(init.body));
+      postedChecks.push(JSON.parse(String(init.body)));
       result = {};
     } else throw new Error(`Unexpected API call: ${path}`);
     return Promise.resolve(Response.json(result));
@@ -136,14 +142,62 @@ Deno.test("approval label lifecycle is independent of the archive merge check", 
     const beforeArchive = approvalRequests;
     pr.labels = [];
     pr.base.ref = "main";
-    if (await archivePassed()) throw new Error("Active change passed main archive gate");
+    if (!await archivePassed()) throw new Error("Normal archive waiting failed the workflow");
+    const pending = postedChecks.at(-2);
+    const waiting = postedChecks.at(-1);
+    if (
+      pending?.name !== "spec-archived" || pending.status !== "in_progress" ||
+      pending.conclusion !== undefined || pending.head_sha !== pr.head.sha ||
+      waiting?.name !== "awaiting-archive" || waiting.conclusion !== "success"
+    ) throw new Error("Archive waiting did not leave the required check pending on the PR head");
     pr.base.ref = "feature/ubuntu";
     if (!await archivePassed()) throw new Error("Active change blocked split PR");
     pr.base.ref = "main";
+    // Retargeting the same commit must override the earlier successful archive result.
+    if (!await archivePassed() || postedChecks.at(-2)?.status !== "in_progress") {
+      throw new Error("Retargeting retained a successful archive verdict");
+    }
     files.splice(0, files.length); // No change package, as in an ordinary dependency PR.
     if (!await archivePassed()) throw new Error("Missing approval blocked an ordinary PR");
-    if (postedCheck?.name !== "spec-archived" || postedCheck.conclusion !== "success") {
+    if (
+      postedChecks.at(-1)?.name !== "spec-archived" || postedChecks.at(-1)?.conclusion !== "success"
+    ) {
       throw new Error("Wrong merge check");
+    }
+    files.push({
+      path: "openspec/changes/archive/2026-10-18-repair/proposal.md",
+      content: "Repair",
+    });
+    if (await archivePassed() || postedChecks.at(-1)?.conclusion !== "failure") {
+      throw new Error("Missing archived tasks was mistaken for normal waiting");
+    }
+    files.push({
+      path: "openspec/changes/archive/2026-10-18-repair/tasks.md",
+      content: "- [ ] pending",
+    });
+    if (await archivePassed()) throw new Error("Incomplete archive passed");
+    files[1].content = "- [x] verified";
+    if (!await archivePassed()) throw new Error("Complete proposal-only archive failed");
+    // A successful split verdict must not survive retarget + failed API reads on the same SHA.
+    pr.base.ref = "feature/repair";
+    if (!await archivePassed()) throw new Error("Split verdict failed");
+    pr.base.ref = "main";
+    await event("edited");
+    failTree = true;
+    if (await archivePassed()) throw new Error("Input retrieval failure passed validation");
+    const failedReadPending = postedChecks.at(-2);
+    if (
+      failedReadPending?.name !== "spec-archived" || failedReadPending.status !== "in_progress" ||
+      postedChecks.at(-1)?.name !== "spec-archived" ||
+      postedChecks.at(-1)?.conclusion !== "failure"
+    ) throw new Error("Input retrieval failure retained a stale successful archive check");
+    failTree = false;
+    failPullRequest = true;
+    if (
+      await archivePassed() || postedChecks.at(-2)?.status !== "in_progress" ||
+      postedChecks.at(-1)?.conclusion !== "failure"
+    ) {
+      throw new Error("PR lookup failure retained a stale successful archive check");
     }
     if (approvalRequests !== beforeArchive) {
       throw new Error("Archive check consulted approval records");
