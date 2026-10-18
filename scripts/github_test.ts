@@ -3,13 +3,9 @@ import {
   approvalActor,
   checkApprovalHead,
   checkArchive,
-  metadataBehaviorChanged,
   packageDigest,
   packagePath,
-  policyChanges,
   publishResult,
-  stableChangesCovered,
-  stableDeltaMatches,
   trustedApprovalRun,
 } from "./github.ts";
 function assert(value: unknown, message = "Assertion failed"): asserts value {
@@ -25,22 +21,6 @@ function rejects(fn: () => unknown): void {
 }
 const proposal = { path: "openspec/changes/ubuntu/proposal.md", content: "Ubuntu 24.04" };
 const delta = { path: "openspec/changes/ubuntu/specs/template/spec.md", content: "non-root user" };
-Deno.test("policy classifies both sides of renames out of protected directories", () => {
-  const changes = policyChanges([
-    { filename: "docs/spec.md", previous_filename: "openspec/specs/template/spec.md" },
-    { filename: "scripts/install.sh", previous_filename: "src/ubuntu/install.sh" },
-    { filename: "docs/metadata.json", previous_filename: "src/ubuntu/devcontainer-template.json" },
-  ]);
-  assert(changes.behavior);
-  assert(changes.stable.includes("openspec/specs/template/spec.md"));
-  assert(changes.metadata.includes("src/ubuntu/devcontainer-template.json"));
-  const moved = policyChanges([
-    { filename: "src/debian/install.sh", previous_filename: "src/ubuntu/install.sh" },
-  ]);
-  assert(moved.paths.includes("src/debian/install.sh"));
-  assert(moved.paths.includes("src/ubuntu/install.sh"));
-  assert(!policyChanges([{ filename: "README.md" }]).behavior);
-});
 Deno.test("approval covers content, ignores tasks, and survives archival", async () => {
   const original = await packageDigest([proposal, delta]);
   assert(original !== await packageDigest([{ ...proposal, content: "Ubuntu 26.04" }, delta]));
@@ -75,15 +55,16 @@ Deno.test("approval rejects a PR pushed after the maintainer's label event", () 
   rejects(() => checkApprovalHead(approvedHead, "b".repeat(40)));
   rejects(() => checkApprovalHead(undefined, approvedHead));
 });
-Deno.test("archive gate is pending in drafts and blocks ready PRs", () => {
-  checkArchive([proposal], true);
-  rejects(() => checkArchive([proposal], false));
+Deno.test("archive gate blocks active changes only when targeting main", () => {
+  checkArchive([proposal], "feature/ubuntu");
+  rejects(() => checkArchive([proposal], "main"));
+  checkArchive([], "main");
   checkArchive(
     [{ ...proposal, path: "openspec/changes/archive/2026-10-17-ubuntu/proposal.md" }, {
       path: "openspec/changes/archive/2026-10-17-ubuntu/tasks.md",
       content: "- [x] complete",
     }],
-    false,
+    "main",
   );
   assert(packagePath("openspec/specs/template/spec.md") === undefined);
 });
@@ -129,74 +110,13 @@ Deno.test("approval rejects records from spoofed, failed, or untrusted workflow 
   }
 });
 
-Deno.test("archived deltas require complete approved requirement bodies", () => {
-  const requirement =
-    "### Requirement: Non-root user\nThe user MUST be vscode.\n\n#### Scenario: Start\n- **WHEN** started\n- **THEN** the user is vscode.\n";
-  const stable = "# Template\n## Requirements\n" + requirement;
-  const added = "## ADDED Requirements\n" + requirement;
-  assert(stableDeltaMatches(added, stable));
-  assert(!stableDeltaMatches(added, stable.replace("MUST be vscode", "MUST be root")));
-  assert(!stableDeltaMatches("## REMOVED Requirements\n" + requirement, stable));
-  assert(stableDeltaMatches("## REMOVED Requirements\n" + requirement, ""));
-  assert(stableChangesCovered([added], "", stable));
-  assert(
-    !stableChangesCovered(
-      [added],
-      "",
-      stable + "\n### Requirement: Unapproved behavior\nThe container MUST run as root.",
-    ),
-  );
-  const changed = stable.replace("MUST be vscode", "MUST be root");
-  assert(!stableChangesCovered([added], stable, changed));
-  const modified = "## MODIFIED Requirements\n" +
-    requirement.replace("MUST be vscode", "MUST be root");
-  assert(stableChangesCovered([modified], stable, changed));
-  assert(
-    !stableChangesCovered(
-      [modified],
-      stable + "\n### Requirement: Retained behavior\nKeep me.\n",
-      changed,
-    ),
-  );
-  assert(stableChangesCovered(["## REMOVED Requirements\n" + requirement], stable, ""));
-});
-Deno.test("renamed requirements retain their approved bodies unless explicitly modified", () => {
-  const before = "## Requirements\n### Requirement: Old name\nThe behavior MUST remain.\n";
-  const after = before.replace("Old name", "New name");
-  const delta =
-    "## RENAMED Requirements\n- FROM: `### Requirement: Old name`\n- TO: `### Requirement: New name`\n";
-  assert(stableChangesCovered([delta], before, after));
-  assert(!stableChangesCovered([delta], before, after.replace("MUST remain", "MUST change")));
-  const modified =
-    "\n## MODIFIED Requirements\n### Requirement: New name\nThe behavior MUST change.\n";
-  assert(
-    stableChangesCovered([delta + modified], before, after.replace("MUST remain", "MUST change")),
-  );
-});
-
-Deno.test("metadata versions and descriptions use ordinary PRs while option behavior requires a spec", () => {
-  const original = {
-    id: "ubuntu",
-    version: "1.0.0",
-    name: "Ubuntu",
-    options: { flavor: { default: "minimal" } },
-  };
-  assert(
-    !metadataBehaviorChanged(
-      JSON.stringify(original),
-      JSON.stringify({ ...original, version: "1.0.1", description: "Updated docs" }),
-    ),
-  );
-  assert(
-    metadataBehaviorChanged(
-      JSON.stringify(original),
-      JSON.stringify({ ...original, options: { flavor: { default: "full" } } }),
-    ),
-  );
-  assert(
-    metadataBehaviorChanged(
-      JSON.stringify(original),
-      JSON.stringify({ ...original, id: "renamed" }),
-    ),
+Deno.test("archive requires completed tasks independently of approval labels", () => {
+  const archived = { ...proposal, path: "openspec/changes/archive/2026-10-18-ubuntu/proposal.md" };
+  rejects(() => checkArchive([archived], "main"));
+  rejects(() =>
+    checkArchive([archived, {
+      path: "openspec/changes/archive/2026-10-18-ubuntu/tasks.md",
+      content: "- [x] one\n- [ ] two",
+    }], "main")
   );
 });
