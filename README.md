@@ -9,9 +9,10 @@ configuration that you can apply to your own project.
 
 <!-- templates:start -->
 
-| Template                       | Version | Description                                                               |
-| ------------------------------ | ------- | ------------------------------------------------------------------------- |
-| [Ubuntu](src/ubuntu/README.md) | 1.0.0   | A minimal Ubuntu 24.04 development container with a non-root vscode user. |
+| Template                           | Version | Description                                                                                        |
+| ---------------------------------- | ------- | -------------------------------------------------------------------------------------------------- |
+| [Research](src/research/README.md) | 1.0.0   | Run experiments on Colab or SkyPilot (SSH or Slurm) with a coding agent and report them in Quarto. |
+| [Ubuntu](src/ubuntu/README.md)     | 1.0.0   | A minimal Ubuntu 24.04 development container with a non-root vscode user.                          |
 
 <!-- templates:end -->
 

@@ -1,0 +1,25 @@
+{
+  "id": "research",
+  "version": "1.0.0",
+  "name": "Research",
+  "description": "Run experiments on Colab or SkyPilot (SSH or Slurm) with a coding agent and report them in Quarto.",
+  "documentationURL": "https://github.com/hoshiori-dev/devcontainer-templates/tree/main/src/research",
+  "licenseURL": "https://github.com/hoshiori-dev/devcontainer-templates/blob/main/LICENSE",
+  "publisher": "hoshiori-dev",
+  "platforms": ["Ubuntu", "Linux", "Python"],
+  "keywords": ["research", "colab", "skypilot", "slurm", "quarto", "agents"],
+  "options": {
+    "skypilotExtra": {
+      "type": "string",
+      "description": "SkyPilot extra to install for the remote backend.",
+      "enum": ["slurm", "ssh", "kubernetes"],
+      "default": "slurm"
+    }
+  },
+  "optionalPaths": [
+    ".pre-commit-config.yaml",
+    ".editorconfig",
+    ".github/dependabot.yml",
+    "AGENTS.md"
+  ]
+}

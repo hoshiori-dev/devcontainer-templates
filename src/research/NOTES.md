@@ -1,0 +1,70 @@
+This template runs experiments on remote compute with a coding agent and writes the results up as
+Quarto reports. It uses the official Ubuntu 24.04 development container image, connects as the
+non-root `vscode` user with zsh as the default shell, and installs:
+
+- Git and Git LFS.
+- Quarto, with its VS Code extension.
+- The Google Colab CLI (`colab`), with Google's Colab VS Code extension.
+- uv, with `pre-commit`, `just`, and SkyPilot (`sky`) installed as uv tools.
+- The EditorConfig, Codex (`openai.chatgpt`), Python, Ruff, and ty VS Code extensions.
+
+## Options
+
+`skypilotExtra` selects the SkyPilot extra: `slurm` (default), `ssh` for SSH node pools, or
+`kubernetes`. Only one extra can be installed. The `ssh` extra includes the Kubernetes client that
+SSH node pools use; `slurm` adds only `python-hostlist` on top of what `ssh` provides. To use both
+backends, choose `ssh` and run `uv tool install --reinstall 'skypilot[ssh]' --with python-hostlist`
+in the container; the uv tool environment is part of the image, so repeat it after each rebuild.
+
+## Coding agents and LaTeX
+
+The template installs no coding agent and no TeX distribution. Add any of these Features in the
+Feature selection step that VS Code shows after you pick the template, or with
+`devcontainer templates apply --features`:
+
+| Tool        | Feature                                                    |
+| ----------- | ---------------------------------------------------------- |
+| Codex       | `ghcr.io/hoshiori-dev/devcontainer-features/codex:1`       |
+| Claude Code | `ghcr.io/hoshiori-dev/devcontainer-features/claude-code:1` |
+| Antigravity | `ghcr.io/hoshiori-dev/devcontainer-features/antigravity:1` |
+| OpenCode    | `ghcr.io/hoshiori-dev/devcontainer-features/opencode:1`    |
+| LaTeX       | `ghcr.io/hoshiori-dev/devcontainer-features/latex:1`       |
+
+For example:
+
+```sh
+devcontainer templates apply \
+  --template-id ghcr.io/hoshiori-dev/devcontainer-templates/research:1.0.0 \
+  --features '[{"id":"ghcr.io/hoshiori-dev/devcontainer-features/claude-code:1","options":{}}]'
+```
+
+Quarto renders PDF output through TeX: add the LaTeX Feature, or run `quarto install tinytex` in the
+container.
+
+## Optional files
+
+`.pre-commit-config.yaml`, `.editorconfig`, `.github/dependabot.yml`, and `AGENTS.md` can be omitted
+when applying the template. `AGENTS.md` tells coding agents how to run experiments, release remote
+resources, keep credentials out of the repository, and write reports; replace its first paragraph
+with your project's details. Claude Code reads `AGENTS.md` when the project has no `CLAUDE.md`
+(Claude Code 2.1.277 or later); otherwise import it from `CLAUDE.md` with a line containing
+`@AGENTS.md`.
+
+The Dependabot configuration checks Dev Container Features, pre-commit hooks, GitHub Actions, and uv
+dependencies. Remove the `pre-commit` entry if you omit `.pre-commit-config.yaml`; the `uv` entry
+reports a missing manifest until the project has a `pyproject.toml`.
+
+## Credentials and state
+
+`~/.sky`, `~/.slurm`, `~/.kube`, and `~/.config/colab-cli` are named volumes for each dev container,
+so SkyPilot state, Slurm and SSH node pool configuration, kubeconfig, and the Colab CLI's OAuth
+token and session records survive a rebuild. Credentials stored elsewhere, such as SSH keys in
+`~/.ssh` or Google Application Default Credentials in `~/.config/gcloud`, are lost on rebuild. No
+host directory is mounted. Use SSH agent forwarding from VS Code for SSH keys, or set up keys inside
+the container. Run `sky check` to see which SkyPilot backends are configured.
+
+The Colab CLI authenticates with Application Default Credentials by default, which this template
+does not provide; run `colab skill` for the authentication options, including OAuth.
+
+The upstream image and Features can receive updates. Rebuild the container to consume them. With
+default options, both Linux amd64 and arm64 are tested by this repository.
