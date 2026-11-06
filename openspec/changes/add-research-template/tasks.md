@@ -19,5 +19,5 @@
 - [x] 2.1 Add `test/research/test.sh` asserting the default-container requirements; pass
       `shellcheck` through `just check origin/main`.
 - [x] 2.2 Run `just package` and `just test research` on amd64 and record the result.
-- [ ] 2.3 Confirm native amd64 and arm64 template tests pass in PR CI.
+- [x] 2.3 Confirm native amd64 and arm64 template tests pass in PR CI.
 - [x] 2.4 Verify that remote-tool state survives a container rebuild and record how it was checked.
