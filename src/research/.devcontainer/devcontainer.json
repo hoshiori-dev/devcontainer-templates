@@ -1,0 +1,51 @@
+{
+  "name": "Research",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "configureZshAsDefaultShell": true
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/git-lfs:1": {},
+    "ghcr.io/hoshiori-dev/devcontainer-features/uv:1": {
+      "toolsToInstall": "pre-commit,rust-just,skypilot[${templateOption:skypilotExtra}]"
+    },
+    "ghcr.io/hoshiori-dev/devcontainer-features/colab-cli:1": {},
+    "ghcr.io/hoshiori-dev/devcontainer-features/quarto:1": {}
+  },
+  "mounts": [
+    {
+      "source": "research-sky-${devcontainerId}",
+      "target": "/home/vscode/.sky",
+      "type": "volume"
+    },
+    {
+      "source": "research-slurm-${devcontainerId}",
+      "target": "/home/vscode/.slurm",
+      "type": "volume"
+    },
+    {
+      "source": "research-kube-${devcontainerId}",
+      "target": "/home/vscode/.kube",
+      "type": "volume"
+    },
+    {
+      "source": "research-colab-${devcontainerId}",
+      "target": "/home/vscode/.config/colab-cli",
+      "type": "volume"
+    }
+  ],
+  "remoteUser": "vscode",
+  "postCreateCommand": "sudo chown vscode:vscode /home/vscode/.sky /home/vscode/.slurm /home/vscode/.kube /home/vscode/.config/colab-cli",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "EditorConfig.EditorConfig",
+        "openai.chatgpt",
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "astral-sh.ty"
+      ]
+    }
+  }
+}

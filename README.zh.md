@@ -9,9 +9,10 @@ hoshiori-dev 维护的 Dev Container Templates。模板提供初始 `.devcontain
 
 <!-- templates:start -->
 
-| 模板                           | 版本  | 描述                                                                      |
-| ------------------------------ | ----- | ------------------------------------------------------------------------- |
-| [Ubuntu](src/ubuntu/README.md) | 1.0.0 | A minimal Ubuntu 24.04 development container with a non-root vscode user. |
+| 模板                               | 版本  | 描述                                                                                               |
+| ---------------------------------- | ----- | -------------------------------------------------------------------------------------------------- |
+| [Research](src/research/README.md) | 1.0.0 | Run experiments on Colab or SkyPilot (SSH or Slurm) with a coding agent and report them in Quarto. |
+| [Ubuntu](src/ubuntu/README.md)     | 1.0.0 | A minimal Ubuntu 24.04 development container with a non-root vscode user.                          |
 
 <!-- templates:end -->
 
